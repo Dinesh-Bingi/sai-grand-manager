@@ -16,9 +16,27 @@ import {
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Shield, Download, FileText, Archive, Calendar, Check, AlertTriangle } from 'lucide-react';
+import { Shield, Download, FileText, Archive, Calendar, Check, AlertTriangle, Loader2 } from 'lucide-react';
 import { format, parseISO, isWithinInterval, startOfDay, endOfDay } from 'date-fns';
 import { toast } from 'sonner';
+import { generatePoliceReportPDF, generateDetailedPDF, generateExcelCSV } from '@/lib/pdfExport';
+
+interface GuestRecord {
+  bookingId: string;
+  roomNumber: string;
+  checkIn: string;
+  checkOut: string;
+  guestName: string;
+  phone: string;
+  idType: string;
+  idNumber: string;
+  address?: string;
+  idFrontImage?: string;
+  idBackImage?: string;
+  hasIdFront: boolean;
+  hasIdBack: boolean;
+  additionalGuests: number;
+}
 
 export default function PoliceExport() {
   const { data: bookings } = useBookings();
@@ -26,6 +44,7 @@ export default function PoliceExport() {
   const [endDate, setEndDate] = useState(format(new Date(), 'yyyy-MM-dd'));
   const [includeIdImages, setIncludeIdImages] = useState(true);
   const [selectedBookings, setSelectedBookings] = useState<string[]>([]);
+  const [isExporting, setIsExporting] = useState<string | null>(null);
 
   // Filter bookings by date range
   const filteredBookings = bookings?.filter(booking => {
@@ -36,7 +55,7 @@ export default function PoliceExport() {
   }) || [];
 
   // Get all primary guests from filtered bookings
-  const guestRecords = filteredBookings.flatMap(booking => {
+  const guestRecords: GuestRecord[] = filteredBookings.flatMap(booking => {
     const primaryGuest = booking.guests?.find(g => g.is_primary);
     if (!primaryGuest) return [];
     return [{
@@ -48,11 +67,16 @@ export default function PoliceExport() {
       phone: primaryGuest.phone || 'N/A',
       idType: primaryGuest.id_proof_type?.replace('_', ' ').toUpperCase() || 'N/A',
       idNumber: primaryGuest.id_proof_number || 'N/A',
+      address: primaryGuest.address || undefined,
+      idFrontImage: primaryGuest.id_front_image || undefined,
+      idBackImage: primaryGuest.id_back_image || undefined,
       hasIdFront: !!primaryGuest.id_front_image,
       hasIdBack: !!primaryGuest.id_back_image,
       additionalGuests: (booking.guests?.length || 1) - 1,
     }];
   });
+
+  const selectedRecords = guestRecords.filter(r => selectedBookings.includes(r.bookingId));
 
   const handleSelectAll = () => {
     if (selectedBookings.length === guestRecords.length) {
@@ -70,7 +94,7 @@ export default function PoliceExport() {
     );
   };
 
-  const handleExportPDF = () => {
+  const handleExportPDF = async () => {
     if (selectedBookings.length === 0) {
       toast.error('No records selected', {
         description: 'Please select at least one guest record to export.',
@@ -78,10 +102,42 @@ export default function PoliceExport() {
       return;
     }
 
-    // TODO: Implement actual PDF generation
-    toast.success('PDF Export Started', {
-      description: `Exporting ${selectedBookings.length} guest records...`,
-    });
+    setIsExporting('pdf');
+    try {
+      await generatePoliceReportPDF(selectedRecords, startDate, endDate);
+      toast.success('PDF Export Complete', {
+        description: `Exported ${selectedRecords.length} guest records.`,
+      });
+    } catch (error) {
+      toast.error('Export failed', {
+        description: error instanceof Error ? error.message : 'Could not generate PDF',
+      });
+    } finally {
+      setIsExporting(null);
+    }
+  };
+
+  const handleExportDetailedPDF = async () => {
+    if (selectedBookings.length === 0) {
+      toast.error('No records selected', {
+        description: 'Please select at least one guest record to export.',
+      });
+      return;
+    }
+
+    setIsExporting('detailed');
+    try {
+      await generateDetailedPDF(selectedRecords, startDate, endDate, includeIdImages);
+      toast.success('Detailed PDF Export Complete', {
+        description: `Exported ${selectedRecords.length} detailed guest records.`,
+      });
+    } catch (error) {
+      toast.error('Export failed', {
+        description: error instanceof Error ? error.message : 'Could not generate PDF',
+      });
+    } finally {
+      setIsExporting(null);
+    }
   };
 
   const handleExportExcel = () => {
@@ -92,24 +148,19 @@ export default function PoliceExport() {
       return;
     }
 
-    // TODO: Implement actual Excel generation
-    toast.success('Excel Export Started', {
-      description: `Exporting ${selectedBookings.length} guest records...`,
-    });
-  };
-
-  const handleExportIdImages = () => {
-    if (selectedBookings.length === 0) {
-      toast.error('No records selected', {
-        description: 'Please select at least one guest record to export.',
+    setIsExporting('excel');
+    try {
+      generateExcelCSV(selectedRecords);
+      toast.success('Excel Export Complete', {
+        description: `Exported ${selectedRecords.length} guest records.`,
       });
-      return;
+    } catch (error) {
+      toast.error('Export failed', {
+        description: error instanceof Error ? error.message : 'Could not generate Excel file',
+      });
+    } finally {
+      setIsExporting(null);
     }
-
-    // TODO: Implement actual ZIP creation with ID images
-    toast.success('ID Images Export Started', {
-      description: `Creating encrypted ZIP with ${selectedBookings.length * 2} images...`,
-    });
   };
 
   return (
@@ -177,7 +228,7 @@ export default function PoliceExport() {
                   onCheckedChange={(checked) => setIncludeIdImages(checked as boolean)}
                 />
                 <Label htmlFor="includeIdImages" className="cursor-pointer">
-                  Include ID proof images
+                  Include ID proof images in detailed report
                 </Label>
               </div>
             </div>
@@ -208,13 +259,13 @@ export default function PoliceExport() {
                 <p>No guest records found for the selected date range</p>
               </div>
             ) : (
-              <div className="rounded-lg border">
+              <div className="rounded-lg border overflow-x-auto">
                 <Table>
                   <TableHeader>
                     <TableRow>
                       <TableHead className="w-12">
                         <Checkbox
-                          checked={selectedBookings.length === guestRecords.length}
+                          checked={selectedBookings.length === guestRecords.length && guestRecords.length > 0}
                           onCheckedChange={handleSelectAll}
                         />
                       </TableHead>
@@ -296,13 +347,17 @@ export default function PoliceExport() {
                 size="lg"
                 className="h-auto flex-col gap-2 py-6"
                 onClick={handleExportPDF}
-                disabled={selectedBookings.length === 0}
+                disabled={selectedBookings.length === 0 || isExporting !== null}
               >
-                <FileText className="h-8 w-8" />
+                {isExporting === 'pdf' ? (
+                  <Loader2 className="h-8 w-8 animate-spin" />
+                ) : (
+                  <FileText className="h-8 w-8" />
+                )}
                 <div className="text-center">
                   <p className="font-semibold">Export as PDF</p>
                   <p className="text-xs text-primary-foreground/70">
-                    Guest list with all details
+                    Summary guest list
                   </p>
                 </div>
               </Button>
@@ -312,13 +367,17 @@ export default function PoliceExport() {
                 variant="secondary"
                 className="h-auto flex-col gap-2 py-6"
                 onClick={handleExportExcel}
-                disabled={selectedBookings.length === 0}
+                disabled={selectedBookings.length === 0 || isExporting !== null}
               >
-                <FileText className="h-8 w-8" />
+                {isExporting === 'excel' ? (
+                  <Loader2 className="h-8 w-8 animate-spin" />
+                ) : (
+                  <FileText className="h-8 w-8" />
+                )}
                 <div className="text-center">
                   <p className="font-semibold">Export as Excel</p>
                   <p className="text-xs text-secondary-foreground/70">
-                    Spreadsheet format
+                    Spreadsheet format (CSV)
                   </p>
                 </div>
               </Button>
@@ -327,14 +386,18 @@ export default function PoliceExport() {
                 size="lg"
                 variant="outline"
                 className="h-auto flex-col gap-2 py-6"
-                onClick={handleExportIdImages}
-                disabled={selectedBookings.length === 0 || !includeIdImages}
+                onClick={handleExportDetailedPDF}
+                disabled={selectedBookings.length === 0 || isExporting !== null}
               >
-                <Archive className="h-8 w-8" />
+                {isExporting === 'detailed' ? (
+                  <Loader2 className="h-8 w-8 animate-spin" />
+                ) : (
+                  <Archive className="h-8 w-8" />
+                )}
                 <div className="text-center">
-                  <p className="font-semibold">Export ID Images</p>
+                  <p className="font-semibold">Detailed Report</p>
                   <p className="text-xs text-muted-foreground">
-                    Encrypted ZIP archive
+                    Full details with addresses
                   </p>
                 </div>
               </Button>
