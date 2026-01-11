@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Building2, Loader2 } from 'lucide-react';
+import { Building2, Loader2, Shield, Lock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -19,8 +19,8 @@ import { useAuth } from '@/components/auth/AuthProvider';
 import { toast } from 'sonner';
 
 const loginSchema = z.object({
-  email: z.string().email('Please enter a valid email'),
-  password: z.string().min(6, 'Password must be at least 6 characters'),
+  email: z.string().email('Please enter a valid email address'),
+  password: z.string().min(6, 'Password must contain at least 6 characters'),
 });
 
 type LoginFormData = z.infer<typeof loginSchema>;
@@ -42,13 +42,13 @@ export default function Login() {
     setIsLoading(true);
     try {
       await signIn(data.email, data.password);
-      toast.success('Welcome back!', {
-        description: 'You have successfully logged in.',
+      toast.success('Welcome Back', {
+        description: 'You have successfully signed in to the management system.',
       });
       navigate('/');
     } catch (error) {
-      toast.error('Login failed', {
-        description: error instanceof Error ? error.message : 'Invalid credentials',
+      toast.error('Authentication Failed', {
+        description: error instanceof Error ? error.message : 'Invalid credentials. Please verify and try again.',
       });
     } finally {
       setIsLoading(false);
@@ -57,29 +57,47 @@ export default function Login() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gradient-hero p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="space-y-4 text-center">
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-primary">
-            <Building2 className="h-9 w-9 text-primary-foreground" />
+      <Card className="w-full max-w-md shadow-xl">
+        <CardHeader className="space-y-4 text-center pb-2">
+          {/* Logo */}
+          <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-gold shadow-lg">
+            <Building2 className="h-10 w-10 text-primary" />
           </div>
-          <div>
-            <h1 className="font-serif text-3xl font-bold">Sai Grand Lodge</h1>
-            <p className="mt-1 text-muted-foreground">Surendrapuri, Yadagirigutta</p>
+          
+          {/* Lodge Name */}
+          <div className="space-y-1">
+            <h1 className="font-serif text-3xl font-bold tracking-tight">
+              Sai Grand Lodge
+            </h1>
+            <p className="text-sm text-muted-foreground">
+              Surendrapuri, Yadagirigutta
+            </p>
+          </div>
+
+          {/* System Title */}
+          <div className="pt-2">
+            <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
+              Property Management System
+            </p>
           </div>
         </CardHeader>
-        <CardContent>
+
+        <CardContent className="pt-6">
           <Form {...loginForm}>
-            <form onSubmit={loginForm.handleSubmit(onLogin)} className="space-y-4">
+            <form onSubmit={loginForm.handleSubmit(onLogin)} className="space-y-5">
               <FormField
                 control={loginForm.control}
                 name="email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Email</FormLabel>
+                    <FormLabel className="text-sm font-medium">
+                      Administrator Email <span className="text-destructive">*</span>
+                    </FormLabel>
                     <FormControl>
                       <Input
                         type="email"
-                        placeholder="admin@saigrand.com"
+                        placeholder="admin@saigrandlodge.com"
+                        autoComplete="email"
                         {...field}
                       />
                     </FormControl>
@@ -87,30 +105,68 @@ export default function Login() {
                   </FormItem>
                 )}
               />
+              
               <FormField
                 control={loginForm.control}
                 name="password"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Password</FormLabel>
+                    <FormLabel className="text-sm font-medium">
+                      Password <span className="text-destructive">*</span>
+                    </FormLabel>
                     <FormControl>
-                      <Input type="password" placeholder="••••••••" {...field} />
+                      <Input 
+                        type="password" 
+                        placeholder="Enter your password"
+                        autoComplete="current-password"
+                        {...field} 
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-              <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Sign In
+
+              <Button 
+                type="submit" 
+                className="w-full h-11 text-base font-semibold" 
+                disabled={isLoading}
+              >
+                {isLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Authenticating...
+                  </>
+                ) : (
+                  <>
+                    <Lock className="mr-2 h-4 w-4" />
+                    Sign In to Dashboard
+                  </>
+                )}
               </Button>
             </form>
           </Form>
 
-          <div className="mt-6 rounded-lg bg-muted/50 p-4 text-center text-sm text-muted-foreground">
-            <p className="font-medium">Admin Access Only</p>
-            <p className="mt-1">This system is restricted to authorized administrators</p>
+          {/* Security Notice */}
+          <div className="mt-6 rounded-lg border border-primary/20 bg-primary/5 p-4">
+            <div className="flex items-start gap-3">
+              <Shield className="mt-0.5 h-5 w-5 text-primary" />
+              <div className="space-y-1">
+                <p className="text-sm font-semibold text-foreground">
+                  Secure Access Only
+                </p>
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  This system is restricted to authorized administrators. 
+                  Unauthorized access attempts are logged and monitored.
+                </p>
+              </div>
+            </div>
           </div>
+
+          {/* Footer */}
+          <p className="mt-6 text-center text-xs text-muted-foreground">
+            © {new Date().getFullYear()} Sai Grand Lodge. All rights reserved.
+          </p>
         </CardContent>
       </Card>
     </div>

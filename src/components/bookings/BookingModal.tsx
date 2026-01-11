@@ -7,6 +7,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
 } from '@/components/ui/dialog';
 import {
   Form,
@@ -20,6 +21,8 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
+import { Badge } from '@/components/ui/badge';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import {
   Select,
   SelectContent,
@@ -28,16 +31,17 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
-import { Plus, Trash2, Camera, AirVent, Droplets, Loader2 } from 'lucide-react';
+import { Progress } from '@/components/ui/progress';
+import { Plus, Trash2, Camera, AirVent, Droplets, Loader2, Shield, CheckCircle2, AlertTriangle } from 'lucide-react';
 import { useCreateBooking } from '@/hooks/useBookings';
 import { toast } from 'sonner';
 import { uploadIdProofImage, dataUrlToFile } from '@/lib/storage';
 import type { Room, IdProofType } from '@/types/hotel';
 
 const guestSchema = z.object({
-  full_name: z.string().min(2, 'Name is required').max(100),
+  full_name: z.string().min(2, 'Guest name is required').max(100, 'Name is too long'),
   phone: z.string().optional(),
-  email: z.string().email().optional().or(z.literal('')),
+  email: z.string().email('Invalid email format').optional().or(z.literal('')),
   address: z.string().optional(),
   is_primary: z.boolean(),
   id_proof_type: z.enum(['aadhaar', 'passport', 'driving_license', 'voter_id']).nullable(),
@@ -47,18 +51,18 @@ const guestSchema = z.object({
 });
 
 const bookingSchema = z.object({
-  expected_checkout: z.string().min(1, 'Checkout date is required'),
+  expected_checkout: z.string().min(1, 'Departure date is required'),
   has_ac: z.boolean(),
   has_geyser: z.boolean(),
-  advance_paid: z.number().min(0),
+  advance_paid: z.number().min(0, 'Advance amount cannot be negative'),
   notes: z.string().optional(),
-  guests: z.array(guestSchema).min(1, 'At least one guest is required'),
+  guests: z.array(guestSchema).min(1, 'Primary guest details are required'),
 }).refine((data) => {
   const primaryGuest = data.guests.find(g => g.is_primary);
   if (!primaryGuest) return false;
   return primaryGuest.id_front_image && primaryGuest.id_back_image;
 }, {
-  message: 'Primary guest must have both front and back ID proof images',
+  message: 'Government ID proof (front and back) is mandatory for police verification',
   path: ['guests'],
 });
 
@@ -74,6 +78,7 @@ export function BookingModal({ room, open, onClose }: BookingModalProps) {
   const createBooking = useCreateBooking();
   const [totalAmount, setTotalAmount] = useState(0);
   const [isUploading, setIsUploading] = useState(false);
+  const [currentStep, setCurrentStep] = useState(1);
 
   const form = useForm<BookingFormData>({
     resolver: zodResolver(bookingSchema),
@@ -106,6 +111,19 @@ export function BookingModal({ room, open, onClose }: BookingModalProps) {
 
   const hasAc = form.watch('has_ac');
   const hasGeyser = form.watch('has_geyser');
+  const primaryGuest = form.watch('guests.0');
+
+  // Calculate progress
+  const getProgress = () => {
+    let completed = 0;
+    if (primaryGuest?.full_name) completed += 20;
+    if (primaryGuest?.phone) completed += 10;
+    if (primaryGuest?.id_proof_type) completed += 15;
+    if (primaryGuest?.id_front_image) completed += 20;
+    if (primaryGuest?.id_back_image) completed += 20;
+    if (form.watch('expected_checkout')) completed += 15;
+    return completed;
+  };
 
   useEffect(() => {
     if (room) {
@@ -124,9 +142,8 @@ export function BookingModal({ room, open, onClose }: BookingModalProps) {
     input.onchange = (e) => {
       const file = (e.target as HTMLInputElement).files?.[0];
       if (file) {
-        // Check file size (max 5MB)
         if (file.size > 5 * 1024 * 1024) {
-          toast.error('File too large', {
+          toast.error('File Size Exceeded', {
             description: 'Please upload an image smaller than 5MB',
           });
           return;
@@ -148,36 +165,30 @@ export function BookingModal({ room, open, onClose }: BookingModalProps) {
     setIsUploading(true);
     
     try {
-      // Generate a temporary booking ID for file uploads
       const tempBookingId = crypto.randomUUID();
       
-      // Process guests and upload images to storage
       const processedGuests = await Promise.all(
         data.guests.map(async (guest, index) => {
           const guestId = crypto.randomUUID();
           let frontImagePath: string | null = null;
           let backImagePath: string | null = null;
           
-          // Upload front image if exists (only for primary guest)
           if (guest.id_front_image && guest.id_front_image.startsWith('data:')) {
             try {
               const file = dataUrlToFile(guest.id_front_image, `id_front_${index}.jpg`);
               frontImagePath = await uploadIdProofImage(file, tempBookingId, guestId, 'front');
             } catch (error) {
               console.error('Error uploading front image:', error);
-              // Fall back to data URL if storage upload fails
               frontImagePath = guest.id_front_image;
             }
           }
           
-          // Upload back image if exists (only for primary guest)
           if (guest.id_back_image && guest.id_back_image.startsWith('data:')) {
             try {
               const file = dataUrlToFile(guest.id_back_image, `id_back_${index}.jpg`);
               backImagePath = await uploadIdProofImage(file, tempBookingId, guestId, 'back');
             } catch (error) {
               console.error('Error uploading back image:', error);
-              // Fall back to data URL if storage upload fails
               backImagePath = guest.id_back_image;
             }
           }
@@ -211,15 +222,16 @@ export function BookingModal({ room, open, onClose }: BookingModalProps) {
         guests: processedGuests,
       });
 
-      toast.success('Booking created successfully!', {
-        description: `Room ${room.room_number} has been booked.`,
+      toast.success('Booking Confirmed Successfully', {
+        description: `Room ${room.room_number} has been assigned. Guest check-in complete.`,
       });
       
       form.reset();
+      setCurrentStep(1);
       onClose();
     } catch (error) {
-      toast.error('Failed to create booking', {
-        description: error instanceof Error ? error.message : 'An error occurred',
+      toast.error('Booking Failed', {
+        description: error instanceof Error ? error.message : 'Unable to complete booking. Please try again.',
       });
     } finally {
       setIsUploading(false);
@@ -228,24 +240,56 @@ export function BookingModal({ room, open, onClose }: BookingModalProps) {
 
   if (!room) return null;
 
+  const progress = getProgress();
+  const canSubmit = progress >= 85;
+
   return (
     <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
       <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="font-serif text-2xl">
-            Book Room {room.room_number}
-          </DialogTitle>
+          <div className="flex items-center justify-between">
+            <div>
+              <DialogTitle className="font-serif text-2xl">
+                New Guest Registration
+              </DialogTitle>
+              <DialogDescription>
+                Room {room.room_number} • {room.room_type.replace('_', ' ')} • Floor {room.floor}
+              </DialogDescription>
+            </div>
+            <Badge variant="outline" className="text-lg px-4 py-1">
+              ₹{totalAmount}/night
+            </Badge>
+          </div>
         </DialogHeader>
+
+        {/* Progress Indicator */}
+        <div className="space-y-2">
+          <div className="flex items-center justify-between text-sm">
+            <span className="text-muted-foreground">Registration Progress</span>
+            <span className="font-medium">{progress}% Complete</span>
+          </div>
+          <Progress value={progress} className="h-2" />
+        </div>
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            {/* Legal Notice */}
+            <Alert className="border-primary/20 bg-primary/5">
+              <Shield className="h-4 w-4" />
+              <AlertDescription className="text-xs">
+                <strong>Police Verification Requirement:</strong> As per government regulations, 
+                valid government ID proof (front and back) is mandatory for all primary guests. 
+                Bookings cannot be processed without proper identification.
+              </AlertDescription>
+            </Alert>
+
             {/* Pricing Summary */}
-            <div className="rounded-lg bg-muted/50 p-4">
+            <div className="rounded-lg border bg-muted/30 p-4">
               <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">Base Price</span>
+                <span className="text-sm text-muted-foreground">Base Room Tariff</span>
                 <span className="font-medium">₹{room.base_price}</span>
               </div>
-              <div className="mt-4 flex items-center gap-6">
+              <div className="mt-4 flex flex-wrap items-center gap-4">
                 <FormField
                   control={form.control}
                   name="has_ac"
@@ -254,9 +298,9 @@ export function BookingModal({ room, open, onClose }: BookingModalProps) {
                       <FormControl>
                         <Switch checked={field.value} onCheckedChange={field.onChange} />
                       </FormControl>
-                      <FormLabel className="!mt-0 flex items-center gap-1">
+                      <FormLabel className="!mt-0 flex items-center gap-1 cursor-pointer">
                         <AirVent className="h-4 w-4" />
-                        AC (+₹{room.ac_charge})
+                        Air Conditioning (+₹{room.ac_charge})
                       </FormLabel>
                     </FormItem>
                   )}
@@ -269,9 +313,9 @@ export function BookingModal({ room, open, onClose }: BookingModalProps) {
                       <FormControl>
                         <Switch checked={field.value} onCheckedChange={field.onChange} />
                       </FormControl>
-                      <FormLabel className="!mt-0 flex items-center gap-1">
+                      <FormLabel className="!mt-0 flex items-center gap-1 cursor-pointer">
                         <Droplets className="h-4 w-4" />
-                        Geyser (+₹{room.geyser_charge})
+                        Hot Water (+₹{room.geyser_charge})
                       </FormLabel>
                     </FormItem>
                   )}
@@ -279,7 +323,7 @@ export function BookingModal({ room, open, onClose }: BookingModalProps) {
               </div>
               <Separator className="my-4" />
               <div className="flex items-center justify-between text-lg font-bold">
-                <span>Total Amount</span>
+                <span>Total Per Night</span>
                 <span className="text-primary">₹{totalAmount}</span>
               </div>
             </div>
@@ -290,7 +334,9 @@ export function BookingModal({ room, open, onClose }: BookingModalProps) {
               name="expected_checkout"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Expected Checkout Date & Time</FormLabel>
+                  <FormLabel>
+                    Expected Departure Date & Time <span className="text-destructive">*</span>
+                  </FormLabel>
                   <FormControl>
                     <Input type="datetime-local" {...field} />
                   </FormControl>
@@ -305,10 +351,13 @@ export function BookingModal({ room, open, onClose }: BookingModalProps) {
               name="advance_paid"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Advance Payment (₹)</FormLabel>
+                  <FormLabel>
+                    Advance Payment Received (₹) <span className="text-destructive">*</span>
+                  </FormLabel>
                   <FormControl>
                     <Input
                       type="number"
+                      placeholder="Enter advance amount"
                       {...field}
                       onChange={(e) => field.onChange(Number(e.target.value))}
                     />
@@ -321,7 +370,7 @@ export function BookingModal({ room, open, onClose }: BookingModalProps) {
             {/* Guests Section */}
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <h3 className="font-semibold">Guest Information</h3>
+                <h3 className="font-semibold">Guest Registration</h3>
                 <Button
                   type="button"
                   variant="outline"
@@ -341,7 +390,7 @@ export function BookingModal({ room, open, onClose }: BookingModalProps) {
                   }
                 >
                   <Plus className="mr-2 h-4 w-4" />
-                  Add Guest
+                  Add Accompanying Guest
                 </Button>
               </div>
 
@@ -351,14 +400,16 @@ export function BookingModal({ room, open, onClose }: BookingModalProps) {
                   className="rounded-lg border p-4 space-y-4"
                 >
                   <div className="flex items-center justify-between">
-                    <span className="font-medium">
-                      {index === 0 ? 'Primary Guest' : `Guest ${index + 1}`}
+                    <div className="flex items-center gap-2">
+                      <span className="font-semibold">
+                        {index === 0 ? 'Primary Guest' : `Accompanying Guest ${index}`}
+                      </span>
                       {index === 0 && (
-                        <span className="ml-2 text-xs text-destructive">
-                          (ID Proof Required)
-                        </span>
+                        <Badge variant="destructive" className="text-[10px]">
+                          ID PROOF MANDATORY
+                        </Badge>
                       )}
-                    </span>
+                    </div>
                     {index > 0 && (
                       <Button
                         type="button"
@@ -377,9 +428,11 @@ export function BookingModal({ room, open, onClose }: BookingModalProps) {
                       name={`guests.${index}.full_name`}
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Full Name *</FormLabel>
+                          <FormLabel>
+                            Full Name (as per ID) <span className="text-destructive">*</span>
+                          </FormLabel>
                           <FormControl>
-                            <Input placeholder="Enter full name" {...field} />
+                            <Input placeholder="Enter full legal name" {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -391,9 +444,9 @@ export function BookingModal({ room, open, onClose }: BookingModalProps) {
                       name={`guests.${index}.phone`}
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Phone</FormLabel>
+                          <FormLabel>Mobile Number</FormLabel>
                           <FormControl>
-                            <Input placeholder="Enter phone number" {...field} />
+                            <Input placeholder="+91 XXXXX XXXXX" {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -409,21 +462,23 @@ export function BookingModal({ room, open, onClose }: BookingModalProps) {
                           name={`guests.${index}.id_proof_type`}
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>ID Proof Type *</FormLabel>
+                              <FormLabel>
+                                Government ID Type <span className="text-destructive">*</span>
+                              </FormLabel>
                               <Select
                                 onValueChange={field.onChange}
                                 value={field.value || undefined}
                               >
                                 <FormControl>
                                   <SelectTrigger>
-                                    <SelectValue placeholder="Select ID type" />
+                                    <SelectValue placeholder="Select ID document" />
                                   </SelectTrigger>
                                 </FormControl>
                                 <SelectContent>
                                   <SelectItem value="aadhaar">Aadhaar Card</SelectItem>
                                   <SelectItem value="passport">Passport</SelectItem>
                                   <SelectItem value="driving_license">Driving License</SelectItem>
-                                  <SelectItem value="voter_id">Voter ID</SelectItem>
+                                  <SelectItem value="voter_id">Voter ID Card</SelectItem>
                                 </SelectContent>
                               </Select>
                               <FormMessage />
@@ -436,7 +491,7 @@ export function BookingModal({ room, open, onClose }: BookingModalProps) {
                           name={`guests.${index}.id_proof_number`}
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>ID Number</FormLabel>
+                              <FormLabel>ID Document Number</FormLabel>
                               <FormControl>
                                 <Input placeholder="Enter ID number" {...field} />
                               </FormControl>
@@ -448,22 +503,32 @@ export function BookingModal({ room, open, onClose }: BookingModalProps) {
 
                       <div className="grid gap-4 md:grid-cols-2">
                         <div className="space-y-2">
-                          <FormLabel>ID Front Image *</FormLabel>
+                          <FormLabel>
+                            ID Front Side <span className="text-destructive">*</span>
+                          </FormLabel>
                           <div
                             className="flex h-32 cursor-pointer items-center justify-center rounded-lg border-2 border-dashed transition-colors hover:border-primary/50 hover:bg-muted/50"
                             onClick={() => handleImageUpload(index, 'id_front_image')}
                           >
                             {form.watch(`guests.${index}.id_front_image`) ? (
-                              <img
-                                src={form.watch(`guests.${index}.id_front_image`)!}
-                                alt="ID Front"
-                                className="h-full w-full rounded-lg object-cover"
-                              />
+                              <div className="relative h-full w-full">
+                                <img
+                                  src={form.watch(`guests.${index}.id_front_image`)!}
+                                  alt="ID Front"
+                                  className="h-full w-full rounded-lg object-cover"
+                                />
+                                <div className="absolute bottom-2 right-2">
+                                  <Badge className="bg-success">
+                                    <CheckCircle2 className="mr-1 h-3 w-3" />
+                                    Captured
+                                  </Badge>
+                                </div>
+                              </div>
                             ) : (
-                              <div className="text-center">
+                              <div className="text-center p-4">
                                 <Camera className="mx-auto h-8 w-8 text-muted-foreground" />
                                 <span className="mt-2 block text-sm text-muted-foreground">
-                                  Capture/Upload Front
+                                  Tap to Capture Front
                                 </span>
                               </div>
                             )}
@@ -471,22 +536,32 @@ export function BookingModal({ room, open, onClose }: BookingModalProps) {
                         </div>
 
                         <div className="space-y-2">
-                          <FormLabel>ID Back Image *</FormLabel>
+                          <FormLabel>
+                            ID Back Side <span className="text-destructive">*</span>
+                          </FormLabel>
                           <div
                             className="flex h-32 cursor-pointer items-center justify-center rounded-lg border-2 border-dashed transition-colors hover:border-primary/50 hover:bg-muted/50"
                             onClick={() => handleImageUpload(index, 'id_back_image')}
                           >
                             {form.watch(`guests.${index}.id_back_image`) ? (
-                              <img
-                                src={form.watch(`guests.${index}.id_back_image`)!}
-                                alt="ID Back"
-                                className="h-full w-full rounded-lg object-cover"
-                              />
+                              <div className="relative h-full w-full">
+                                <img
+                                  src={form.watch(`guests.${index}.id_back_image`)!}
+                                  alt="ID Back"
+                                  className="h-full w-full rounded-lg object-cover"
+                                />
+                                <div className="absolute bottom-2 right-2">
+                                  <Badge className="bg-success">
+                                    <CheckCircle2 className="mr-1 h-3 w-3" />
+                                    Captured
+                                  </Badge>
+                                </div>
+                              </div>
                             ) : (
-                              <div className="text-center">
+                              <div className="text-center p-4">
                                 <Camera className="mx-auto h-8 w-8 text-muted-foreground" />
                                 <span className="mt-2 block text-sm text-muted-foreground">
-                                  Capture/Upload Back
+                                  Tap to Capture Back
                                 </span>
                               </div>
                             )}
@@ -501,9 +576,9 @@ export function BookingModal({ room, open, onClose }: BookingModalProps) {
                     name={`guests.${index}.address`}
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Address</FormLabel>
+                        <FormLabel>Residential Address</FormLabel>
                         <FormControl>
-                          <Textarea placeholder="Enter address" {...field} />
+                          <Textarea placeholder="Enter complete residential address" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -513,9 +588,12 @@ export function BookingModal({ room, open, onClose }: BookingModalProps) {
               ))}
 
               {form.formState.errors.guests?.root && (
-                <p className="text-sm text-destructive">
-                  {form.formState.errors.guests.root.message}
-                </p>
+                <Alert variant="destructive">
+                  <AlertTriangle className="h-4 w-4" />
+                  <AlertDescription>
+                    {form.formState.errors.guests.root.message}
+                  </AlertDescription>
+                </Alert>
               )}
             </div>
 
@@ -525,9 +603,12 @@ export function BookingModal({ room, open, onClose }: BookingModalProps) {
               name="notes"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Notes (Optional)</FormLabel>
+                  <FormLabel>Special Instructions (Optional)</FormLabel>
                   <FormControl>
-                    <Textarea placeholder="Any special requests or notes..." {...field} />
+                    <Textarea 
+                      placeholder="Any special requests, preferences, or notes for this booking..."
+                      {...field} 
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -535,7 +616,7 @@ export function BookingModal({ room, open, onClose }: BookingModalProps) {
             />
 
             {/* Submit */}
-            <div className="flex gap-3">
+            <div className="flex gap-3 pt-4 border-t">
               <Button
                 type="button"
                 variant="outline"
@@ -543,17 +624,17 @@ export function BookingModal({ room, open, onClose }: BookingModalProps) {
                 onClick={onClose}
                 disabled={isUploading}
               >
-                Cancel
+                Cancel Registration
               </Button>
               <Button
                 type="submit"
                 className="flex-1"
-                disabled={createBooking.isPending || isUploading}
+                disabled={createBooking.isPending || isUploading || !canSubmit}
               >
                 {(createBooking.isPending || isUploading) && (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 )}
-                {isUploading ? 'Uploading Images...' : 'Confirm Booking'}
+                {isUploading ? 'Uploading Documents...' : 'Confirm Booking & Check-In'}
               </Button>
             </div>
           </form>

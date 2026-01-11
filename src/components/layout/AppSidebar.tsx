@@ -13,6 +13,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Building2,
+  Download,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -24,14 +25,15 @@ import {
 } from '@/components/ui/tooltip';
 
 const navItems = [
-  { icon: LayoutDashboard, label: 'Dashboard', path: '/' },
-  { icon: BedDouble, label: 'Rooms', path: '/rooms' },
-  { icon: CalendarCheck, label: 'Bookings', path: '/bookings' },
-  { icon: Users, label: 'Guests', path: '/guests' },
-  { icon: FileText, label: 'Reports', path: '/reports' },
-  { icon: Shield, label: 'Police Export', path: '/police-export' },
-  { icon: ClipboardList, label: 'Waiting List', path: '/waiting-list' },
-  { icon: Settings, label: 'Settings', path: '/settings' },
+  { icon: LayoutDashboard, label: 'Dashboard', path: '/', description: 'Operations overview' },
+  { icon: BedDouble, label: 'Room Status', path: '/rooms', description: 'View all rooms' },
+  { icon: CalendarCheck, label: 'Reservations', path: '/bookings', description: 'Manage bookings' },
+  { icon: Users, label: 'Guest Registry', path: '/guests', description: 'Guest records' },
+  { icon: FileText, label: 'Revenue Reports', path: '/reports', description: 'Analytics' },
+  { icon: Shield, label: 'Police Verification', path: '/police-export', description: 'Compliance exports' },
+  { icon: ClipboardList, label: 'Waiting List', path: '/waiting-list', description: 'Queue management' },
+  { icon: Download, label: 'Install App', path: '/install', description: 'Get mobile app' },
+  { icon: Settings, label: 'Administration', path: '/settings', description: 'System settings' },
 ];
 
 export function AppSidebar() {
@@ -52,16 +54,16 @@ export function AppSidebar() {
           'flex items-center gap-3 border-b border-sidebar-border px-4 py-4',
           collapsed && 'justify-center px-2'
         )}>
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-sidebar-primary">
-            <Building2 className="h-6 w-6 text-sidebar-primary-foreground" />
+          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-gold">
+            <Building2 className="h-6 w-6 text-primary" />
           </div>
           {!collapsed && (
             <div className="flex flex-col">
               <span className="font-serif text-lg font-bold text-sidebar-foreground">
                 Sai Grand
               </span>
-              <span className="text-xs text-sidebar-foreground/70">
-                Lodge Management
+              <span className="text-[10px] font-medium uppercase tracking-wider text-sidebar-foreground/60">
+                Property Management
               </span>
             </div>
           )}
@@ -95,7 +97,8 @@ export function AppSidebar() {
                 <Tooltip key={item.path} delayDuration={0}>
                   <TooltipTrigger asChild>{navButton}</TooltipTrigger>
                   <TooltipContent side="right" className="font-medium">
-                    {item.label}
+                    <p>{item.label}</p>
+                    <p className="text-xs text-muted-foreground">{item.description}</p>
                   </TooltipContent>
                 </Tooltip>
               );
@@ -106,13 +109,21 @@ export function AppSidebar() {
         </nav>
 
         {/* Footer */}
-        <div className="border-t border-sidebar-border p-2">
+        <div className="border-t border-sidebar-border p-2 space-y-1">
+          {/* Version Info */}
+          {!collapsed && (
+            <div className="px-3 py-2 text-[10px] text-sidebar-foreground/50">
+              <p>Version 1.0.0</p>
+              <p>© 2024 Sai Grand Lodge</p>
+            </div>
+          )}
+          
           <Button
             variant="ghost"
             size="sm"
             onClick={() => signOut()}
             className={cn(
-              'w-full justify-start gap-3 text-sidebar-foreground/80 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground',
+              'w-full justify-start gap-3 text-sidebar-foreground/80 hover:bg-destructive/20 hover:text-destructive',
               collapsed && 'justify-center px-2'
             )}
           >

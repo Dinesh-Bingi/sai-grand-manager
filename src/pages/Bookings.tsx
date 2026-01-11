@@ -31,15 +31,16 @@ import {
 } from '@/components/ui/dialog';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Search, Plus, LogOut, User, Calendar, Clock } from 'lucide-react';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Search, Plus, LogOut, User, Calendar, Clock, AlertTriangle, IndianRupee } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { toast } from 'sonner';
 import type { Booking, Room, BookingStatus } from '@/types/hotel';
 
 const statusConfig: Record<BookingStatus, { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }> = {
   confirmed: { label: 'Confirmed', variant: 'secondary' },
-  checked_in: { label: 'Checked In', variant: 'default' },
-  checked_out: { label: 'Checked Out', variant: 'outline' },
+  checked_in: { label: 'In Residence', variant: 'default' },
+  checked_out: { label: 'Departed', variant: 'outline' },
   cancelled: { label: 'Cancelled', variant: 'destructive' },
 };
 
@@ -69,8 +70,8 @@ export default function Bookings() {
 
   const handleNewBooking = () => {
     if (availableRooms.length === 0) {
-      toast.error('No rooms available', {
-        description: 'All rooms are currently occupied or under maintenance.',
+      toast.error('No Rooms Available', {
+        description: 'All accommodation is currently occupied. Please check the waiting list.',
       });
       return;
     }
@@ -86,14 +87,14 @@ export default function Bookings() {
         bookingId: selectedBooking.id,
         roomId: selectedBooking.room_id,
       });
-      toast.success('Checkout successful', {
-        description: `Room ${selectedBooking.room?.room_number} is now ready for cleaning.`,
+      toast.success('Guest Departure Confirmed', {
+        description: `Room ${selectedBooking.room?.room_number} has been released for housekeeping.`,
       });
       setCheckoutDialogOpen(false);
       setSelectedBooking(null);
     } catch (error) {
-      toast.error('Checkout failed', {
-        description: error instanceof Error ? error.message : 'An error occurred',
+      toast.error('Checkout Failed', {
+        description: error instanceof Error ? error.message : 'Unable to process departure. Please try again.',
       });
     }
   };
@@ -119,14 +120,14 @@ export default function Bookings() {
         {/* Header */}
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
-            <h1 className="font-serif text-3xl font-bold">Bookings</h1>
+            <h1 className="font-serif text-3xl font-bold">Reservation Management</h1>
             <p className="text-muted-foreground">
-              Manage guest bookings and checkouts
+              Manage guest arrivals, departures, and room allocations
             </p>
           </div>
-          <Button onClick={handleNewBooking}>
-            <Plus className="mr-2 h-4 w-4" />
-            New Booking
+          <Button onClick={handleNewBooking} size="lg">
+            <Plus className="mr-2 h-5 w-5" />
+            Register New Guest
           </Button>
         </div>
 
@@ -138,7 +139,7 @@ export default function Bookings() {
                 <Calendar className="h-5 w-5 text-primary" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Today's Check-ins</p>
+                <p className="text-sm text-muted-foreground">Today's Arrivals</p>
                 <p className="text-2xl font-bold">
                   {bookings?.filter(b => 
                     format(parseISO(b.check_in), 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd')
@@ -153,7 +154,7 @@ export default function Bookings() {
                 <User className="h-5 w-5 text-info" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Active Guests</p>
+                <p className="text-sm text-muted-foreground">Guests in Residence</p>
                 <p className="text-2xl font-bold">
                   {bookings?.filter(b => b.status === 'checked_in').length || 0}
                 </p>
@@ -166,7 +167,7 @@ export default function Bookings() {
                 <Clock className="h-5 w-5 text-warning" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Pending Checkout</p>
+                <p className="text-sm text-muted-foreground">Pending Departures</p>
                 <p className="text-2xl font-bold">
                   {bookings?.filter(b => 
                     b.status === 'checked_in' && 
@@ -182,7 +183,7 @@ export default function Bookings() {
                 <LogOut className="h-5 w-5 text-success" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Available Rooms</p>
+                <p className="text-sm text-muted-foreground">Rooms Available</p>
                 <p className="text-2xl font-bold">{availableRooms.length}</p>
               </div>
             </CardContent>
@@ -194,7 +195,7 @@ export default function Bookings() {
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
-              placeholder="Search by room or guest name..."
+              placeholder="Search by room number or guest name..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-10"
@@ -208,10 +209,10 @@ export default function Bookings() {
               <SelectValue placeholder="Filter by status" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All Bookings</SelectItem>
-              <SelectItem value="checked_in">Checked In</SelectItem>
+              <SelectItem value="all">All Reservations</SelectItem>
+              <SelectItem value="checked_in">In Residence</SelectItem>
               <SelectItem value="confirmed">Confirmed</SelectItem>
-              <SelectItem value="checked_out">Checked Out</SelectItem>
+              <SelectItem value="checked_out">Departed</SelectItem>
               <SelectItem value="cancelled">Cancelled</SelectItem>
             </SelectContent>
           </Select>
@@ -225,9 +226,9 @@ export default function Bookings() {
                 <TableRow>
                   <TableHead>Room</TableHead>
                   <TableHead>Guest</TableHead>
-                  <TableHead>Check-in</TableHead>
-                  <TableHead>Expected Checkout</TableHead>
-                  <TableHead>Amount</TableHead>
+                  <TableHead>Arrival</TableHead>
+                  <TableHead>Scheduled Departure</TableHead>
+                  <TableHead>Total Amount</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
@@ -235,8 +236,14 @@ export default function Bookings() {
               <TableBody>
                 {filteredBookings.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="py-12 text-center text-muted-foreground">
-                      No bookings found
+                    <TableCell colSpan={7} className="py-12 text-center">
+                      <div className="flex flex-col items-center gap-2">
+                        <Calendar className="h-12 w-12 text-muted-foreground/30" />
+                        <p className="font-medium">No Reservations Found</p>
+                        <p className="text-sm text-muted-foreground">
+                          Adjust your search criteria or create a new booking
+                        </p>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ) : (
@@ -246,15 +253,15 @@ export default function Bookings() {
                     
                     return (
                       <TableRow key={booking.id}>
-                        <TableCell className="font-medium">
+                        <TableCell className="font-semibold">
                           {booking.room?.room_number}
                         </TableCell>
                         <TableCell>
                           <div>
-                            <p className="font-medium">{primaryGuest?.full_name || 'N/A'}</p>
+                            <p className="font-medium">{primaryGuest?.full_name || 'Guest'}</p>
                             {booking.guests && booking.guests.length > 1 && (
                               <p className="text-xs text-muted-foreground">
-                                +{booking.guests.length - 1} more
+                                +{booking.guests.length - 1} accompanying guest{booking.guests.length > 2 ? 's' : ''}
                               </p>
                             )}
                           </div>
@@ -265,7 +272,9 @@ export default function Bookings() {
                         <TableCell>
                           {format(parseISO(booking.expected_checkout), 'MMM d, h:mm a')}
                         </TableCell>
-                        <TableCell>₹{Number(booking.total_amount).toLocaleString()}</TableCell>
+                        <TableCell className="font-medium">
+                          ₹{Number(booking.total_amount).toLocaleString()}
+                        </TableCell>
                         <TableCell>
                           <Badge variant={status.variant}>{status.label}</Badge>
                         </TableCell>
@@ -280,7 +289,7 @@ export default function Bookings() {
                               }}
                             >
                               <LogOut className="mr-2 h-4 w-4" />
-                              Checkout
+                              Process Departure
                             </Button>
                           )}
                         </TableCell>
@@ -308,40 +317,51 @@ export default function Bookings() {
       <Dialog open={checkoutDialogOpen} onOpenChange={setCheckoutDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Confirm Checkout</DialogTitle>
+            <DialogTitle className="font-serif text-xl">
+              Confirm Guest Departure
+            </DialogTitle>
             <DialogDescription>
-              Are you sure you want to checkout Room {selectedBooking?.room?.room_number}?
-              The room will be marked for cleaning.
+              Please verify the final bill before processing departure for Room {selectedBooking?.room?.room_number}.
             </DialogDescription>
           </DialogHeader>
-          <div className="rounded-lg bg-muted/50 p-4">
-            <div className="space-y-2 text-sm">
+          
+          <Alert>
+            <AlertTriangle className="h-4 w-4" />
+            <AlertTitle>Final Settlement Required</AlertTitle>
+            <AlertDescription>
+              Ensure all charges are collected before confirming departure. Room will be sent for housekeeping.
+            </AlertDescription>
+          </Alert>
+
+          <div className="rounded-lg border bg-muted/30 p-4">
+            <div className="space-y-3 text-sm">
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Total Amount:</span>
+                <span className="text-muted-foreground">Room Charges</span>
                 <span className="font-medium">
                   ₹{Number(selectedBooking?.total_amount || 0).toLocaleString()}
                 </span>
               </div>
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Advance Paid:</span>
-                <span className="font-medium">
-                  ₹{Number(selectedBooking?.advance_paid || 0).toLocaleString()}
+                <span className="text-muted-foreground">Advance Received</span>
+                <span className="font-medium text-success">
+                  - ₹{Number(selectedBooking?.advance_paid || 0).toLocaleString()}
                 </span>
               </div>
-              <div className="flex justify-between border-t pt-2">
-                <span className="font-medium">Balance Due:</span>
-                <span className="font-bold text-primary">
+              <div className="flex justify-between border-t pt-3">
+                <span className="font-semibold">Balance Due</span>
+                <span className="text-xl font-bold text-primary">
                   ₹{(Number(selectedBooking?.total_amount || 0) - Number(selectedBooking?.advance_paid || 0)).toLocaleString()}
                 </span>
               </div>
             </div>
           </div>
+
           <DialogFooter>
             <Button variant="outline" onClick={() => setCheckoutDialogOpen(false)}>
               Cancel
             </Button>
             <Button onClick={handleCheckout} disabled={checkoutBooking.isPending}>
-              {checkoutBooking.isPending ? 'Processing...' : 'Confirm Checkout'}
+              {checkoutBooking.isPending ? 'Processing...' : 'Confirm Departure & Collect Payment'}
             </Button>
           </DialogFooter>
         </DialogContent>
