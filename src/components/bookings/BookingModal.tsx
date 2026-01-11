@@ -28,9 +28,10 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
-import { Plus, Trash2, Upload, Camera, AirVent, Droplets, AlertCircle } from 'lucide-react';
+import { Plus, Trash2, Camera, AirVent, Droplets, Loader2 } from 'lucide-react';
 import { useCreateBooking } from '@/hooks/useBookings';
 import { toast } from 'sonner';
+import { uploadIdProofImage, dataUrlToFile } from '@/lib/storage';
 import type { Room, IdProofType } from '@/types/hotel';
 
 const guestSchema = z.object({
@@ -72,6 +73,7 @@ interface BookingModalProps {
 export function BookingModal({ room, open, onClose }: BookingModalProps) {
   const createBooking = useCreateBooking();
   const [totalAmount, setTotalAmount] = useState(0);
+  const [isUploading, setIsUploading] = useState(false);
 
   const form = useForm<BookingFormData>({
     resolver: zodResolver(bookingSchema),
@@ -122,6 +124,14 @@ export function BookingModal({ room, open, onClose }: BookingModalProps) {
     input.onchange = (e) => {
       const file = (e.target as HTMLInputElement).files?.[0];
       if (file) {
+        // Check file size (max 5MB)
+        if (file.size > 5 * 1024 * 1024) {
+          toast.error('File too large', {
+            description: 'Please upload an image smaller than 5MB',
+          });
+          return;
+        }
+        
         const reader = new FileReader();
         reader.onloadend = () => {
           form.setValue(`guests.${guestIndex}.${field}`, reader.result as string);
@@ -135,7 +145,57 @@ export function BookingModal({ room, open, onClose }: BookingModalProps) {
   const onSubmit = async (data: BookingFormData) => {
     if (!room) return;
 
+    setIsUploading(true);
+    
     try {
+      // Generate a temporary booking ID for file uploads
+      const tempBookingId = crypto.randomUUID();
+      
+      // Process guests and upload images to storage
+      const processedGuests = await Promise.all(
+        data.guests.map(async (guest, index) => {
+          const guestId = crypto.randomUUID();
+          let frontImagePath: string | null = null;
+          let backImagePath: string | null = null;
+          
+          // Upload front image if exists (only for primary guest)
+          if (guest.id_front_image && guest.id_front_image.startsWith('data:')) {
+            try {
+              const file = dataUrlToFile(guest.id_front_image, `id_front_${index}.jpg`);
+              frontImagePath = await uploadIdProofImage(file, tempBookingId, guestId, 'front');
+            } catch (error) {
+              console.error('Error uploading front image:', error);
+              // Fall back to data URL if storage upload fails
+              frontImagePath = guest.id_front_image;
+            }
+          }
+          
+          // Upload back image if exists (only for primary guest)
+          if (guest.id_back_image && guest.id_back_image.startsWith('data:')) {
+            try {
+              const file = dataUrlToFile(guest.id_back_image, `id_back_${index}.jpg`);
+              backImagePath = await uploadIdProofImage(file, tempBookingId, guestId, 'back');
+            } catch (error) {
+              console.error('Error uploading back image:', error);
+              // Fall back to data URL if storage upload fails
+              backImagePath = guest.id_back_image;
+            }
+          }
+          
+          return {
+            full_name: guest.full_name,
+            phone: guest.phone || null,
+            email: guest.email || null,
+            address: guest.address || null,
+            is_primary: guest.is_primary,
+            id_proof_type: guest.id_proof_type as IdProofType | null,
+            id_proof_number: guest.id_proof_number || null,
+            id_front_image: frontImagePath,
+            id_back_image: backImagePath,
+          };
+        })
+      );
+
       await createBooking.mutateAsync({
         room_id: room.id,
         check_in: new Date().toISOString(),
@@ -148,17 +208,7 @@ export function BookingModal({ room, open, onClose }: BookingModalProps) {
         total_amount: totalAmount,
         advance_paid: data.advance_paid,
         notes: data.notes,
-        guests: data.guests.map(g => ({
-          full_name: g.full_name,
-          phone: g.phone || null,
-          email: g.email || null,
-          address: g.address || null,
-          is_primary: g.is_primary,
-          id_proof_type: g.id_proof_type as IdProofType | null,
-          id_proof_number: g.id_proof_number || null,
-          id_front_image: g.id_front_image,
-          id_back_image: g.id_back_image,
-        })),
+        guests: processedGuests,
       });
 
       toast.success('Booking created successfully!', {
@@ -171,6 +221,8 @@ export function BookingModal({ room, open, onClose }: BookingModalProps) {
       toast.error('Failed to create booking', {
         description: error instanceof Error ? error.message : 'An error occurred',
       });
+    } finally {
+      setIsUploading(false);
     }
   };
 
@@ -460,12 +512,10 @@ export function BookingModal({ room, open, onClose }: BookingModalProps) {
                 </div>
               ))}
 
-              {form.formState.errors.guests && (
-                <div className="flex items-center gap-2 text-sm text-destructive">
-                  <AlertCircle className="h-4 w-4" />
-                  {form.formState.errors.guests.message || 
-                    form.formState.errors.guests.root?.message}
-                </div>
+              {form.formState.errors.guests?.root && (
+                <p className="text-sm text-destructive">
+                  {form.formState.errors.guests.root.message}
+                </p>
               )}
             </div>
 
@@ -484,17 +534,26 @@ export function BookingModal({ room, open, onClose }: BookingModalProps) {
               )}
             />
 
-            {/* Submit Button */}
+            {/* Submit */}
             <div className="flex gap-3">
-              <Button type="button" variant="outline" onClick={onClose} className="flex-1">
+              <Button
+                type="button"
+                variant="outline"
+                className="flex-1"
+                onClick={onClose}
+                disabled={isUploading}
+              >
                 Cancel
               </Button>
-              <Button 
-                type="submit" 
+              <Button
+                type="submit"
                 className="flex-1"
-                disabled={createBooking.isPending}
+                disabled={createBooking.isPending || isUploading}
               >
-                {createBooking.isPending ? 'Creating...' : 'Confirm Booking'}
+                {(createBooking.isPending || isUploading) && (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                )}
+                {isUploading ? 'Uploading Images...' : 'Confirm Booking'}
               </Button>
             </div>
           </form>
