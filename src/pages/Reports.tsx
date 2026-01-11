@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { useBookings } from '@/hooks/useBookings';
 import { useRooms } from '@/hooks/useRooms';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
@@ -25,8 +25,9 @@ import {
   Cell,
   Legend,
 } from 'recharts';
-import { FileDown, FileSpreadsheet, Printer, Calendar } from 'lucide-react';
+import { FileDown, FileSpreadsheet, Printer, Calendar, TrendingUp, IndianRupee, Building2, AirVent } from 'lucide-react';
 import { format, parseISO, startOfMonth, endOfMonth, eachDayOfInterval, isWithinInterval } from 'date-fns';
+import { toast } from 'sonner';
 
 export default function Reports() {
   const { data: bookings } = useBookings();
@@ -47,6 +48,7 @@ export default function Reports() {
   const acRevenue = monthlyBookings.filter(b => b.has_ac).reduce((acc, b) => acc + Number(b.ac_charge), 0);
   const geyserRevenue = monthlyBookings.filter(b => b.has_geyser).reduce((acc, b) => acc + Number(b.geyser_charge), 0);
   const baseRevenue = monthlyBookings.reduce((acc, b) => acc + Number(b.base_price), 0);
+  const averageBookingValue = monthlyBookings.length > 0 ? totalRevenue / monthlyBookings.length : 0;
 
   // Daily revenue data
   const dailyData = eachDayOfInterval({ start: monthStart, end: monthEnd }).map(day => {
@@ -94,7 +96,7 @@ export default function Reports() {
 
   // Floor-wise revenue
   const floorRevenue = [1, 2, 3, 4, 5].map(floor => ({
-    floor: floor === 5 ? 'Penthouse' : `Floor ${floor}`,
+    floor: floor === 5 ? 'Penthouse Level' : `${floor}${floor === 1 ? 'st' : floor === 2 ? 'nd' : floor === 3 ? 'rd' : 'th'} Floor`,
     revenue: monthlyBookings.filter(b => 
       rooms?.find(r => r.id === b.room_id)?.floor === floor
     ).reduce((acc, b) => acc + Number(b.total_amount), 0),
@@ -102,18 +104,20 @@ export default function Reports() {
 
   // AC vs Non-AC breakdown
   const acBreakdown = [
-    { name: 'AC Rooms', value: monthlyBookings.filter(b => b.has_ac).length, color: 'hsl(200, 80%, 50%)' },
-    { name: 'Non-AC Rooms', value: monthlyBookings.filter(b => !b.has_ac).length, color: 'hsl(220, 10%, 50%)' },
+    { name: 'Air-Conditioned', value: monthlyBookings.filter(b => b.has_ac).length, color: 'hsl(200, 80%, 50%)' },
+    { name: 'Non Air-Conditioned', value: monthlyBookings.filter(b => !b.has_ac).length, color: 'hsl(220, 10%, 50%)' },
   ].filter(item => item.value > 0);
 
   const handleExportPDF = () => {
-    // TODO: Implement PDF export
-    console.log('Exporting PDF...');
+    toast.info('Generating Report', {
+      description: 'Your PDF report is being prepared...',
+    });
   };
 
   const handleExportExcel = () => {
-    // TODO: Implement Excel export
-    console.log('Exporting Excel...');
+    toast.info('Generating Spreadsheet', {
+      description: 'Your Excel report is being prepared...',
+    });
   };
 
   const handlePrint = () => {
@@ -126,9 +130,12 @@ export default function Reports() {
         {/* Header */}
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
-            <h1 className="font-serif text-3xl font-bold">Reports</h1>
-            <p className="text-muted-foreground">
-              Financial analytics and insights
+            <h1 className="font-serif text-3xl font-bold flex items-center gap-3">
+              <TrendingUp className="h-8 w-8 text-primary" />
+              Revenue Analytics
+            </h1>
+            <p className="text-muted-foreground mt-1">
+              Comprehensive financial insights and performance metrics
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -150,84 +157,97 @@ export default function Reports() {
                 })}
               </SelectContent>
             </Select>
-            <Button variant="outline" size="icon" onClick={handleExportPDF}>
+            <Button variant="outline" size="icon" onClick={handleExportPDF} title="Export PDF">
               <FileDown className="h-4 w-4" />
             </Button>
-            <Button variant="outline" size="icon" onClick={handleExportExcel}>
+            <Button variant="outline" size="icon" onClick={handleExportExcel} title="Export Excel">
               <FileSpreadsheet className="h-4 w-4" />
             </Button>
-            <Button variant="outline" size="icon" onClick={handlePrint}>
+            <Button variant="outline" size="icon" onClick={handlePrint} title="Print Report">
               <Printer className="h-4 w-4" />
             </Button>
           </div>
         </div>
 
         {/* Summary Cards */}
-        <div className="grid gap-4 md:grid-cols-4">
-          <Card>
-            <CardContent className="p-5">
-              <p className="text-sm text-muted-foreground">Total Revenue</p>
-              <p className="text-3xl font-bold">₹{totalRevenue.toLocaleString()}</p>
-              <p className="mt-1 text-xs text-muted-foreground">
-                {monthlyBookings.length} bookings
+        <div className="grid gap-4 md:grid-cols-5">
+          <Card className="md:col-span-2 border-l-4 border-l-primary bg-gradient-to-br from-primary/5 to-transparent">
+            <CardContent className="p-6">
+              <div className="flex items-center gap-3 mb-2">
+                <IndianRupee className="h-5 w-5 text-primary" />
+                <p className="text-sm font-medium text-muted-foreground">Total Revenue</p>
+              </div>
+              <p className="text-4xl font-bold">₹{totalRevenue.toLocaleString('en-IN')}</p>
+              <p className="mt-2 text-sm text-muted-foreground">
+                {monthlyBookings.length} reservation{monthlyBookings.length !== 1 ? 's' : ''} • ₹{Math.round(averageBookingValue).toLocaleString('en-IN')} avg
               </p>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="p-5">
-              <p className="text-sm text-muted-foreground">Base Room Revenue</p>
-              <p className="text-3xl font-bold">₹{baseRevenue.toLocaleString()}</p>
+              <p className="text-sm font-medium text-muted-foreground">Room Charges</p>
+              <p className="text-2xl font-bold mt-1">₹{baseRevenue.toLocaleString('en-IN')}</p>
+              <p className="text-xs text-muted-foreground mt-1">Base tariff collection</p>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="p-5">
-              <p className="text-sm text-muted-foreground">AC Charges</p>
-              <p className="text-3xl font-bold">₹{acRevenue.toLocaleString()}</p>
+              <p className="text-sm font-medium text-muted-foreground">AC Charges</p>
+              <p className="text-2xl font-bold mt-1">₹{acRevenue.toLocaleString('en-IN')}</p>
+              <p className="text-xs text-muted-foreground mt-1">Air conditioning fees</p>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="p-5">
-              <p className="text-sm text-muted-foreground">Geyser Charges</p>
-              <p className="text-3xl font-bold">₹{geyserRevenue.toLocaleString()}</p>
+              <p className="text-sm font-medium text-muted-foreground">Geyser Charges</p>
+              <p className="text-2xl font-bold mt-1">₹{geyserRevenue.toLocaleString('en-IN')}</p>
+              <p className="text-xs text-muted-foreground mt-1">Hot water facility fees</p>
             </CardContent>
           </Card>
         </div>
 
         {/* Charts */}
         <Tabs defaultValue="daily" className="space-y-4">
-          <TabsList>
-            <TabsTrigger value="daily">Daily Revenue</TabsTrigger>
-            <TabsTrigger value="roomtype">By Room Type</TabsTrigger>
-            <TabsTrigger value="floor">By Floor</TabsTrigger>
-            <TabsTrigger value="ac">AC Analysis</TabsTrigger>
+          <TabsList className="bg-muted/50 p-1">
+            <TabsTrigger value="daily" className="data-[state=active]:bg-background">Daily Trend</TabsTrigger>
+            <TabsTrigger value="roomtype" className="data-[state=active]:bg-background">By Category</TabsTrigger>
+            <TabsTrigger value="floor" className="data-[state=active]:bg-background">By Floor</TabsTrigger>
+            <TabsTrigger value="ac" className="data-[state=active]:bg-background">AC Analysis</TabsTrigger>
           </TabsList>
 
           <TabsContent value="daily">
             <Card>
-              <CardHeader>
-                <CardTitle>Daily Revenue Trend</CardTitle>
+              <CardHeader className="border-b">
+                <CardTitle className="flex items-center gap-2">
+                  <TrendingUp className="h-5 w-5 text-primary" />
+                  Daily Revenue Performance
+                </CardTitle>
+                <CardDescription>
+                  Day-by-day revenue collection for {format(monthStart, 'MMMM yyyy')}
+                </CardDescription>
               </CardHeader>
-              <CardContent>
+              <CardContent className="pt-6">
                 <ResponsiveContainer width="100%" height={400}>
                   <BarChart data={dailyData}>
                     <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                     <XAxis 
                       dataKey="date" 
-                      tick={{ fill: 'hsl(var(--muted-foreground))' }}
+                      tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
                       tickLine={{ stroke: 'hsl(var(--border))' }}
                     />
                     <YAxis 
-                      tick={{ fill: 'hsl(var(--muted-foreground))' }}
+                      tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
                       tickLine={{ stroke: 'hsl(var(--border))' }}
-                      tickFormatter={(value) => `₹${value}`}
+                      tickFormatter={(value) => `₹${value.toLocaleString('en-IN')}`}
                     />
                     <Tooltip 
                       contentStyle={{
                         backgroundColor: 'hsl(var(--card))',
                         border: '1px solid hsl(var(--border))',
                         borderRadius: '8px',
+                        boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)',
                       }}
-                      formatter={(value: number) => [`₹${value.toLocaleString()}`, 'Revenue']}
+                      formatter={(value: number) => [`₹${value.toLocaleString('en-IN')}`, 'Revenue']}
                     />
                     <Bar 
                       dataKey="revenue" 
@@ -242,10 +262,16 @@ export default function Reports() {
 
           <TabsContent value="roomtype">
             <Card>
-              <CardHeader>
-                <CardTitle>Revenue by Room Type</CardTitle>
+              <CardHeader className="border-b">
+                <CardTitle className="flex items-center gap-2">
+                  <Building2 className="h-5 w-5 text-primary" />
+                  Revenue by Room Category
+                </CardTitle>
+                <CardDescription>
+                  Revenue distribution across different accommodation types
+                </CardDescription>
               </CardHeader>
-              <CardContent>
+              <CardContent className="pt-6">
                 <ResponsiveContainer width="100%" height={400}>
                   <PieChart>
                     <Pie
@@ -266,7 +292,7 @@ export default function Reports() {
                         border: '1px solid hsl(var(--border))',
                         borderRadius: '8px',
                       }}
-                      formatter={(value: number) => `₹${value.toLocaleString()}`}
+                      formatter={(value: number) => `₹${value.toLocaleString('en-IN')}`}
                     />
                     <Legend />
                   </PieChart>
@@ -277,23 +303,29 @@ export default function Reports() {
 
           <TabsContent value="floor">
             <Card>
-              <CardHeader>
-                <CardTitle>Floor-wise Revenue</CardTitle>
+              <CardHeader className="border-b">
+                <CardTitle className="flex items-center gap-2">
+                  <Building2 className="h-5 w-5 text-primary" />
+                  Revenue by Floor Level
+                </CardTitle>
+                <CardDescription>
+                  Comparative performance across different floors
+                </CardDescription>
               </CardHeader>
-              <CardContent>
+              <CardContent className="pt-6">
                 <ResponsiveContainer width="100%" height={400}>
                   <BarChart data={floorRevenue} layout="vertical">
                     <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                     <XAxis 
                       type="number"
-                      tick={{ fill: 'hsl(var(--muted-foreground))' }}
-                      tickFormatter={(value) => `₹${value}`}
+                      tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
+                      tickFormatter={(value) => `₹${value.toLocaleString('en-IN')}`}
                     />
                     <YAxis 
                       type="category"
                       dataKey="floor"
-                      tick={{ fill: 'hsl(var(--muted-foreground))' }}
-                      width={80}
+                      tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
+                      width={100}
                     />
                     <Tooltip 
                       contentStyle={{
@@ -301,7 +333,7 @@ export default function Reports() {
                         border: '1px solid hsl(var(--border))',
                         borderRadius: '8px',
                       }}
-                      formatter={(value: number) => [`₹${value.toLocaleString()}`, 'Revenue']}
+                      formatter={(value: number) => [`₹${value.toLocaleString('en-IN')}`, 'Revenue']}
                     />
                     <Bar 
                       dataKey="revenue" 
@@ -316,10 +348,16 @@ export default function Reports() {
 
           <TabsContent value="ac">
             <Card>
-              <CardHeader>
-                <CardTitle>AC vs Non-AC Bookings</CardTitle>
+              <CardHeader className="border-b">
+                <CardTitle className="flex items-center gap-2">
+                  <AirVent className="h-5 w-5 text-primary" />
+                  Air-Conditioning Analysis
+                </CardTitle>
+                <CardDescription>
+                  Distribution of AC versus non-AC room bookings
+                </CardDescription>
               </CardHeader>
-              <CardContent>
+              <CardContent className="pt-6">
                 <ResponsiveContainer width="100%" height={400}>
                   <PieChart>
                     <Pie

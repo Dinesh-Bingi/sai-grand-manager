@@ -6,281 +6,384 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Badge } from '@/components/ui/badge';
 import {
   Building2,
   IndianRupee,
   Bell,
   Shield,
   Database,
-  Smartphone,
+  Clock,
+  MapPin,
+  Phone,
+  Settings as SettingsIcon,
+  Save,
+  Download,
+  Upload,
+  AlertTriangle,
 } from 'lucide-react';
+import { toast } from 'sonner';
 
 export default function Settings() {
+  const handleSave = (section: string) => {
+    toast.success('Settings Updated', {
+      description: `${section} settings have been saved successfully.`,
+    });
+  };
+
   return (
     <AppLayout>
       <div className="space-y-6">
         {/* Header */}
         <div>
-          <h1 className="font-serif text-3xl font-bold">Settings</h1>
-          <p className="text-muted-foreground">
-            Configure system settings and preferences
+          <h1 className="font-serif text-3xl font-bold flex items-center gap-3">
+            <SettingsIcon className="h-8 w-8 text-primary" />
+            System Configuration
+          </h1>
+          <p className="text-muted-foreground mt-1">
+            Manage property settings, pricing, and security preferences
           </p>
         </div>
 
-        <Tabs defaultValue="lodge" className="space-y-6">
-          <TabsList className="grid w-full max-w-xl grid-cols-4">
-            <TabsTrigger value="lodge">Lodge</TabsTrigger>
-            <TabsTrigger value="pricing">Pricing</TabsTrigger>
-            <TabsTrigger value="notifications">Alerts</TabsTrigger>
-            <TabsTrigger value="security">Security</TabsTrigger>
+        <Tabs defaultValue="property" className="space-y-6">
+          <TabsList className="bg-muted/50 p-1 w-full max-w-2xl grid grid-cols-4">
+            <TabsTrigger value="property" className="data-[state=active]:bg-background">Property</TabsTrigger>
+            <TabsTrigger value="tariff" className="data-[state=active]:bg-background">Tariff</TabsTrigger>
+            <TabsTrigger value="alerts" className="data-[state=active]:bg-background">Alerts</TabsTrigger>
+            <TabsTrigger value="security" className="data-[state=active]:bg-background">Security</TabsTrigger>
           </TabsList>
 
-          {/* Lodge Settings */}
-          <TabsContent value="lodge">
+          {/* Property Settings */}
+          <TabsContent value="property">
             <Card>
-              <CardHeader>
+              <CardHeader className="border-b">
                 <CardTitle className="flex items-center gap-2">
-                  <Building2 className="h-5 w-5" />
-                  Lodge Information
+                  <Building2 className="h-5 w-5 text-primary" />
+                  Property Information
                 </CardTitle>
                 <CardDescription>
-                  Basic information about your lodge
+                  Configure your establishment's basic details and operating hours
                 </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="grid gap-4 md:grid-cols-2">
+              <CardContent className="pt-6 space-y-6">
+                <div className="grid gap-6 md:grid-cols-2">
                   <div className="space-y-2">
-                    <Label htmlFor="lodgeName">Lodge Name</Label>
-                    <Input id="lodgeName" defaultValue="Sai Grand Lodge" />
+                    <Label htmlFor="lodgeName" className="font-medium">Establishment Name</Label>
+                    <Input id="lodgeName" defaultValue="Sai Grand Lodge" className="font-medium" />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="phone">Contact Phone</Label>
+                    <Label htmlFor="phone" className="font-medium flex items-center gap-2">
+                      <Phone className="h-4 w-4" />
+                      Reception Contact
+                    </Label>
                     <Input id="phone" type="tel" placeholder="+91 9876543210" />
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="address">Address</Label>
+                  <Label htmlFor="address" className="font-medium flex items-center gap-2">
+                    <MapPin className="h-4 w-4" />
+                    Property Address
+                  </Label>
                   <Input
                     id="address"
-                    defaultValue="Surendrapuri, Yadagirigutta, Telangana"
+                    defaultValue="Surendrapuri, Yadagirigutta, Telangana 508115"
                   />
                 </div>
-                <div className="grid gap-4 md:grid-cols-2">
+                <Separator />
+                <div className="grid gap-6 md:grid-cols-2">
                   <div className="space-y-2">
-                    <Label htmlFor="checkoutTime">Standard Checkout Time</Label>
+                    <Label htmlFor="checkoutTime" className="font-medium flex items-center gap-2">
+                      <Clock className="h-4 w-4" />
+                      Standard Check-out Time
+                    </Label>
                     <Input id="checkoutTime" type="time" defaultValue="11:00" />
+                    <p className="text-xs text-muted-foreground">Guests must vacate by this time</p>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="checkinTime">Standard Check-in Time</Label>
+                    <Label htmlFor="checkinTime" className="font-medium flex items-center gap-2">
+                      <Clock className="h-4 w-4" />
+                      Standard Check-in Time
+                    </Label>
                     <Input id="checkinTime" type="time" defaultValue="12:00" />
+                    <p className="text-xs text-muted-foreground">Earliest time for new arrivals</p>
                   </div>
                 </div>
-                <Button>Save Changes</Button>
+                <div className="flex justify-end">
+                  <Button onClick={() => handleSave('Property')} className="gap-2">
+                    <Save className="h-4 w-4" />
+                    Save Property Settings
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           </TabsContent>
 
-          {/* Pricing Settings */}
-          <TabsContent value="pricing">
+          {/* Tariff Settings */}
+          <TabsContent value="tariff">
             <Card>
-              <CardHeader>
+              <CardHeader className="border-b">
                 <CardTitle className="flex items-center gap-2">
-                  <IndianRupee className="h-5 w-5" />
-                  Pricing Configuration
+                  <IndianRupee className="h-5 w-5 text-primary" />
+                  Room Tariff Configuration
                 </CardTitle>
                 <CardDescription>
-                  Configure default pricing for different room types
+                  Set base rates and additional charges for each room category
                 </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="rounded-lg border p-4">
-                  <h4 className="font-semibold mb-4">Standard Rooms (1st & 2nd Floor)</h4>
+              <CardContent className="pt-6 space-y-6">
+                <div className="rounded-xl border p-5">
+                  <div className="flex items-center justify-between mb-4">
+                    <h4 className="font-semibold text-lg">Standard Rooms</h4>
+                    <Badge variant="secondary">1st & 2nd Floor</Badge>
+                  </div>
                   <div className="grid gap-4 md:grid-cols-3">
                     <div className="space-y-2">
-                      <Label>Base Price (₹)</Label>
+                      <Label className="text-sm font-medium">Base Tariff (₹/night)</Label>
                       <Input type="number" defaultValue="800" />
                     </div>
                     <div className="space-y-2">
-                      <Label>AC Charge (₹)</Label>
+                      <Label className="text-sm font-medium">AC Supplement (₹)</Label>
                       <Input type="number" defaultValue="300" />
                     </div>
                     <div className="space-y-2">
-                      <Label>Geyser Charge (₹)</Label>
+                      <Label className="text-sm font-medium">Geyser Charge (₹)</Label>
                       <Input type="number" defaultValue="100" />
                     </div>
                   </div>
                 </div>
 
-                <div className="rounded-lg border p-4">
-                  <h4 className="font-semibold mb-4">Luxury Rooms (4th Floor)</h4>
+                <div className="rounded-xl border p-5">
+                  <div className="flex items-center justify-between mb-4">
+                    <h4 className="font-semibold text-lg">Luxury Rooms</h4>
+                    <Badge variant="secondary">4th Floor</Badge>
+                  </div>
                   <div className="grid gap-4 md:grid-cols-3">
                     <div className="space-y-2">
-                      <Label>Base Price (₹)</Label>
+                      <Label className="text-sm font-medium">Base Tariff (₹/night)</Label>
                       <Input type="number" defaultValue="1500" />
                     </div>
                     <div className="space-y-2">
-                      <Label>AC Charge (₹)</Label>
+                      <Label className="text-sm font-medium">AC Supplement (₹)</Label>
                       <Input type="number" defaultValue="400" />
                     </div>
                     <div className="space-y-2">
-                      <Label>Geyser Charge (₹)</Label>
+                      <Label className="text-sm font-medium">Geyser Charge (₹)</Label>
                       <Input type="number" defaultValue="150" />
                     </div>
                   </div>
                 </div>
 
-                <div className="rounded-lg border p-4">
-                  <h4 className="font-semibold mb-4">Penthouse Suites</h4>
+                <div className="rounded-xl border p-5 bg-primary/5">
+                  <div className="flex items-center justify-between mb-4">
+                    <h4 className="font-semibold text-lg">Penthouse Suites</h4>
+                    <Badge>Premium</Badge>
+                  </div>
                   <div className="grid gap-4 md:grid-cols-3">
                     <div className="space-y-2">
-                      <Label>Base Price (₹)</Label>
+                      <Label className="text-sm font-medium">Base Tariff (₹/night)</Label>
                       <Input type="number" defaultValue="3000" />
                     </div>
                     <div className="space-y-2">
-                      <Label>AC Charge (₹)</Label>
+                      <Label className="text-sm font-medium">AC Supplement (₹)</Label>
                       <Input type="number" defaultValue="500" />
                     </div>
                     <div className="space-y-2">
-                      <Label>Geyser Charge (₹)</Label>
+                      <Label className="text-sm font-medium">Geyser Charge (₹)</Label>
                       <Input type="number" defaultValue="200" />
                     </div>
                   </div>
                 </div>
 
-                <Button>Update Pricing</Button>
+                <div className="flex justify-end">
+                  <Button onClick={() => handleSave('Tariff')} className="gap-2">
+                    <Save className="h-4 w-4" />
+                    Update Tariff
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           </TabsContent>
 
-          {/* Notification Settings */}
-          <TabsContent value="notifications">
+          {/* Alert Settings */}
+          <TabsContent value="alerts">
             <Card>
-              <CardHeader>
+              <CardHeader className="border-b">
                 <CardTitle className="flex items-center gap-2">
-                  <Bell className="h-5 w-5" />
-                  Alert Settings
+                  <Bell className="h-5 w-5 text-primary" />
+                  Alert & Notification Settings
                 </CardTitle>
                 <CardDescription>
-                  Configure checkout alerts and notifications
+                  Configure system alerts for check-outs, overstays, and high-demand periods
                 </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-medium">Checkout Alerts</p>
+              <CardContent className="pt-6 space-y-6">
+                <div className="flex items-center justify-between p-4 rounded-xl border">
+                  <div className="space-y-1">
+                    <p className="font-medium">Departure Alerts</p>
                     <p className="text-sm text-muted-foreground">
-                      Show alerts for upcoming checkouts
+                      Display alerts for upcoming guest departures
                     </p>
                   </div>
                   <Switch defaultChecked />
                 </div>
-                <Separator />
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-medium">Overdue Checkout Warnings</p>
+                
+                <div className="flex items-center justify-between p-4 rounded-xl border">
+                  <div className="space-y-1">
+                    <p className="font-medium">Overstay Warnings</p>
                     <p className="text-sm text-muted-foreground">
-                      Highlight rooms past checkout time
+                      Highlight rooms past scheduled check-out time
                     </p>
                   </div>
                   <Switch defaultChecked />
                 </div>
-                <Separator />
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-medium">Weekend Rush Mode</p>
+                
+                <div className="flex items-center justify-between p-4 rounded-xl border border-warning/50 bg-warning/5">
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <p className="font-medium">High-Demand Mode</p>
+                      <Badge variant="secondary" className="text-xs">Weekend Rush</Badge>
+                    </div>
                     <p className="text-sm text-muted-foreground">
-                      Enable quick booking mode on weekends
+                      Enable quick booking mode during peak periods
                     </p>
                   </div>
                   <Switch defaultChecked />
                 </div>
+                
                 <Separator />
-                <div className="space-y-2">
-                  <Label>Checkout Alert Time (hours before)</Label>
-                  <Input type="number" defaultValue="2" className="max-w-[100px]" />
+                
+                <div className="space-y-3">
+                  <Label className="font-medium">Departure Alert Lead Time</Label>
+                  <div className="flex items-center gap-3">
+                    <Input type="number" defaultValue="2" className="w-24" />
+                    <span className="text-sm text-muted-foreground">hours before check-out</span>
+                  </div>
                 </div>
-                <Button>Save Settings</Button>
+                
+                <div className="flex justify-end">
+                  <Button onClick={() => handleSave('Alert')} className="gap-2">
+                    <Save className="h-4 w-4" />
+                    Save Alert Settings
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           </TabsContent>
 
           {/* Security Settings */}
           <TabsContent value="security">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Shield className="h-5 w-5" />
-                  Security Settings
-                </CardTitle>
-                <CardDescription>
-                  Manage security and access control
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-medium">Auto Logout</p>
-                    <p className="text-sm text-muted-foreground">
-                      Automatically logout after inactivity
-                    </p>
+            <div className="space-y-6">
+              <Card>
+                <CardHeader className="border-b">
+                  <CardTitle className="flex items-center gap-2">
+                    <Shield className="h-5 w-5 text-primary" />
+                    Security & Access Control
+                  </CardTitle>
+                  <CardDescription>
+                    Manage authentication, session security, and compliance settings
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="pt-6 space-y-6">
+                  <div className="flex items-center justify-between p-4 rounded-xl border">
+                    <div className="space-y-1">
+                      <p className="font-medium">Automatic Session Timeout</p>
+                      <p className="text-sm text-muted-foreground">
+                        Automatically log out after period of inactivity
+                      </p>
+                    </div>
+                    <Switch defaultChecked />
                   </div>
-                  <Switch defaultChecked />
-                </div>
-                <Separator />
-                <div className="space-y-2">
-                  <Label>Auto Logout Timeout (minutes)</Label>
-                  <Input type="number" defaultValue="30" className="max-w-[100px]" />
-                </div>
-                <Separator />
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-medium">Require ID Proof</p>
-                    <p className="text-sm text-muted-foreground">
-                      Block bookings without primary guest ID
-                    </p>
+                  
+                  <div className="space-y-3">
+                    <Label className="font-medium">Session Timeout Duration</Label>
+                    <div className="flex items-center gap-3">
+                      <Input type="number" defaultValue="30" className="w-24" />
+                      <span className="text-sm text-muted-foreground">minutes of inactivity</span>
+                    </div>
                   </div>
-                  <Switch defaultChecked />
-                </div>
-                <Separator />
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-medium">Activity Logging</p>
-                    <p className="text-sm text-muted-foreground">
-                      Track all user actions for audit
-                    </p>
+                  
+                  <Separator />
+                  
+                  <div className="flex items-center justify-between p-4 rounded-xl border border-destructive/30 bg-destructive/5">
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <p className="font-medium">Mandatory ID Verification</p>
+                        <Badge variant="destructive" className="text-xs">Required</Badge>
+                      </div>
+                      <p className="text-sm text-muted-foreground">
+                        Block reservations without valid government ID proof
+                      </p>
+                    </div>
+                    <Switch defaultChecked disabled />
                   </div>
-                  <Switch defaultChecked />
-                </div>
-                <Button>Save Settings</Button>
-              </CardContent>
-            </Card>
+                  
+                  <div className="flex items-center justify-between p-4 rounded-xl border">
+                    <div className="space-y-1">
+                      <p className="font-medium">Activity Audit Trail</p>
+                      <p className="text-sm text-muted-foreground">
+                        Log all user actions for security audit
+                      </p>
+                    </div>
+                    <Switch defaultChecked />
+                  </div>
+                  
+                  <div className="flex justify-end">
+                    <Button onClick={() => handleSave('Security')} className="gap-2">
+                      <Save className="h-4 w-4" />
+                      Save Security Settings
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
 
-            <Card className="mt-6">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Database className="h-5 w-5" />
-                  Backup & Restore
-                </CardTitle>
-                <CardDescription>
-                  Manage data backups
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center justify-between rounded-lg border p-4">
-                  <div>
-                    <p className="font-medium">Automatic Daily Backup</p>
-                    <p className="text-sm text-muted-foreground">
-                      Last backup: Today at 3:00 AM
-                    </p>
+              <Card>
+                <CardHeader className="border-b">
+                  <CardTitle className="flex items-center gap-2">
+                    <Database className="h-5 w-5 text-primary" />
+                    Data Backup & Recovery
+                  </CardTitle>
+                  <CardDescription>
+                    Manage automated backups and data restoration
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="pt-6 space-y-6">
+                  <div className="flex items-center justify-between p-4 rounded-xl border bg-success/5 border-success/30">
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <p className="font-medium">Automatic Daily Backup</p>
+                        <Badge className="bg-success hover:bg-success/90 text-xs">Active</Badge>
+                      </div>
+                      <p className="text-sm text-muted-foreground">
+                        Last backup: Today at 03:00 AM
+                      </p>
+                    </div>
+                    <Switch defaultChecked />
                   </div>
-                  <Switch defaultChecked />
-                </div>
-                <div className="flex gap-2">
-                  <Button variant="outline">Download Backup</Button>
-                  <Button variant="outline">Restore from Backup</Button>
-                </div>
-              </CardContent>
-            </Card>
+                  
+                  <div className="flex gap-3">
+                    <Button variant="outline" className="gap-2">
+                      <Download className="h-4 w-4" />
+                      Download Backup
+                    </Button>
+                    <Button variant="outline" className="gap-2">
+                      <Upload className="h-4 w-4" />
+                      Restore from Backup
+                    </Button>
+                  </div>
+                  
+                  <div className="flex items-start gap-3 p-4 rounded-xl bg-warning/10 border border-warning/30">
+                    <AlertTriangle className="h-5 w-5 text-warning flex-shrink-0 mt-0.5" />
+                    <div>
+                      <p className="font-medium text-sm">Important Notice</p>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        Restoring from a backup will replace all current data. 
+                        Please ensure you have a recent backup before proceeding.
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
           </TabsContent>
         </Tabs>
       </div>

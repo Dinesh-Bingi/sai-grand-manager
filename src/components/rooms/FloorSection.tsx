@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { ChevronDown, ChevronUp } from 'lucide-react';
+import { ChevronDown, ChevronUp, DoorOpen, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { RoomCard } from './RoomCard';
 import { cn } from '@/lib/utils';
 import type { Room } from '@/types/hotel';
@@ -16,11 +17,11 @@ interface FloorSectionProps {
 }
 
 const floorNames: Record<number, string> = {
-  1: '1st Floor - Standard Rooms',
-  2: '2nd Floor - Standard Rooms',
-  3: '3rd Floor - Function Hall & Deluxe',
-  4: '4th Floor - Luxury Rooms',
-  5: 'Penthouse - Premium Suites',
+  1: 'Ground Level — Standard Accommodations',
+  2: 'First Level — Standard Accommodations',
+  3: 'Second Level — Function Hall & Deluxe',
+  4: 'Third Level — Luxury Accommodations',
+  5: 'Penthouse Level — Premium Suites',
 };
 
 export function FloorSection({
@@ -35,39 +36,55 @@ export function FloorSection({
   
   const availableCount = rooms.filter(r => r.status === 'available').length;
   const occupiedCount = rooms.filter(r => r.status === 'occupied').length;
+  const totalRooms = rooms.length;
 
   return (
-    <div className="rounded-xl border bg-card">
+    <div className="rounded-xl border bg-card shadow-sm overflow-hidden">
       <Button
         variant="ghost"
         onClick={() => setIsOpen(!isOpen)}
-        className="flex w-full items-center justify-between rounded-t-xl px-5 py-4 text-left hover:bg-muted/50"
+        className="flex w-full items-center justify-between px-6 py-5 text-left hover:bg-muted/50 rounded-none"
       >
         <div className="flex items-center gap-4">
-          <h3 className="font-serif text-lg font-semibold">{floorNames[floor] || `Floor ${floor}`}</h3>
-          <div className="flex items-center gap-2">
-            <span className="inline-flex items-center rounded-full bg-success/10 px-2.5 py-0.5 text-xs font-medium text-success">
-              {availableCount} available
-            </span>
-            <span className="inline-flex items-center rounded-full bg-destructive/10 px-2.5 py-0.5 text-xs font-medium text-destructive">
-              {occupiedCount} occupied
-            </span>
+          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
+            <span className="text-lg font-bold text-primary">{floor}</span>
+          </div>
+          <div>
+            <h3 className="font-serif text-lg font-semibold">
+              {floorNames[floor] || `Floor ${floor}`}
+            </h3>
+            <p className="text-sm text-muted-foreground">
+              {totalRooms} accommodation{totalRooms !== 1 ? 's' : ''}
+            </p>
           </div>
         </div>
-        {isOpen ? (
-          <ChevronUp className="h-5 w-5 text-muted-foreground" />
-        ) : (
-          <ChevronDown className="h-5 w-5 text-muted-foreground" />
-        )}
+        
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
+            <Badge variant="outline" className="gap-1.5 bg-success/10 text-success border-success/30 font-medium">
+              <DoorOpen className="h-3.5 w-3.5" />
+              {availableCount} Available
+            </Badge>
+            <Badge variant="outline" className="gap-1.5 bg-destructive/10 text-destructive border-destructive/30 font-medium">
+              <Users className="h-3.5 w-3.5" />
+              {occupiedCount} Occupied
+            </Badge>
+          </div>
+          {isOpen ? (
+            <ChevronUp className="h-5 w-5 text-muted-foreground" />
+          ) : (
+            <ChevronDown className="h-5 w-5 text-muted-foreground" />
+          )}
+        </div>
       </Button>
       
       <div
         className={cn(
-          'grid gap-4 overflow-hidden transition-all duration-300',
-          isOpen ? 'max-h-[2000px] p-5 pt-2' : 'max-h-0 p-0'
+          'grid gap-4 overflow-hidden transition-all duration-300 ease-in-out',
+          isOpen ? 'max-h-[2000px] px-6 pb-6 pt-2' : 'max-h-0 p-0'
         )}
         style={{
-          gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
+          gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
         }}
       >
         {rooms.map((room) => (
