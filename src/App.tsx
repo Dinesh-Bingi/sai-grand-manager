@@ -14,6 +14,8 @@ import PoliceExport from "./pages/PoliceExport";
 import WaitingList from "./pages/WaitingList";
 import Settings from "./pages/Settings";
 import Login from "./pages/Login";
+import Install from "./pages/Install";
+import Offline from "./pages/Offline";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -27,6 +29,8 @@ const App = () => (
         <BrowserRouter>
           <Routes>
             <Route path="/login" element={<Login />} />
+            <Route path="/install" element={<Install />} />
+            <Route path="/offline" element={<Offline />} />
             <Route
               path="/"
               element={

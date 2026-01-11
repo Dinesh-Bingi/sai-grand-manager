@@ -16,7 +16,7 @@ import {
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Shield, Download, FileText, Archive, Calendar, Check, AlertTriangle, Loader2 } from 'lucide-react';
+import { Shield, Download, FileText, Archive, Calendar, Check, AlertTriangle, Loader2, Scale, Users } from 'lucide-react';
 import { format, parseISO, isWithinInterval, startOfDay, endOfDay } from 'date-fns';
 import { toast } from 'sonner';
 import { generatePoliceReportPDF, generateDetailedPDF, generateExcelCSV } from '@/lib/pdfExport';
@@ -77,6 +77,7 @@ export default function PoliceExport() {
   });
 
   const selectedRecords = guestRecords.filter(r => selectedBookings.includes(r.bookingId));
+  const completeRecords = guestRecords.filter(r => r.hasIdFront && r.hasIdBack).length;
 
   const handleSelectAll = () => {
     if (selectedBookings.length === guestRecords.length) {
@@ -96,7 +97,7 @@ export default function PoliceExport() {
 
   const handleExportPDF = async () => {
     if (selectedBookings.length === 0) {
-      toast.error('No records selected', {
+      toast.error('No Records Selected', {
         description: 'Please select at least one guest record to export.',
       });
       return;
@@ -105,12 +106,12 @@ export default function PoliceExport() {
     setIsExporting('pdf');
     try {
       await generatePoliceReportPDF(selectedRecords, startDate, endDate);
-      toast.success('PDF Export Complete', {
-        description: `Exported ${selectedRecords.length} guest records.`,
+      toast.success('Report Generated Successfully', {
+        description: `Exported ${selectedRecords.length} guest record${selectedRecords.length !== 1 ? 's' : ''} for police verification.`,
       });
     } catch (error) {
-      toast.error('Export failed', {
-        description: error instanceof Error ? error.message : 'Could not generate PDF',
+      toast.error('Export Failed', {
+        description: error instanceof Error ? error.message : 'Unable to generate PDF report',
       });
     } finally {
       setIsExporting(null);
@@ -119,7 +120,7 @@ export default function PoliceExport() {
 
   const handleExportDetailedPDF = async () => {
     if (selectedBookings.length === 0) {
-      toast.error('No records selected', {
+      toast.error('No Records Selected', {
         description: 'Please select at least one guest record to export.',
       });
       return;
@@ -128,12 +129,12 @@ export default function PoliceExport() {
     setIsExporting('detailed');
     try {
       await generateDetailedPDF(selectedRecords, startDate, endDate, includeIdImages);
-      toast.success('Detailed PDF Export Complete', {
-        description: `Exported ${selectedRecords.length} detailed guest records.`,
+      toast.success('Detailed Report Generated', {
+        description: `Exported ${selectedRecords.length} comprehensive guest record${selectedRecords.length !== 1 ? 's' : ''}.`,
       });
     } catch (error) {
-      toast.error('Export failed', {
-        description: error instanceof Error ? error.message : 'Could not generate PDF',
+      toast.error('Export Failed', {
+        description: error instanceof Error ? error.message : 'Unable to generate detailed report',
       });
     } finally {
       setIsExporting(null);
@@ -142,7 +143,7 @@ export default function PoliceExport() {
 
   const handleExportExcel = () => {
     if (selectedBookings.length === 0) {
-      toast.error('No records selected', {
+      toast.error('No Records Selected', {
         description: 'Please select at least one guest record to export.',
       });
       return;
@@ -151,12 +152,12 @@ export default function PoliceExport() {
     setIsExporting('excel');
     try {
       generateExcelCSV(selectedRecords);
-      toast.success('Excel Export Complete', {
-        description: `Exported ${selectedRecords.length} guest records.`,
+      toast.success('Spreadsheet Generated', {
+        description: `Exported ${selectedRecords.length} guest record${selectedRecords.length !== 1 ? 's' : ''} to Excel format.`,
       });
     } catch (error) {
-      toast.error('Export failed', {
-        description: error instanceof Error ? error.message : 'Could not generate Excel file',
+      toast.error('Export Failed', {
+        description: error instanceof Error ? error.message : 'Unable to generate spreadsheet',
       });
     } finally {
       setIsExporting(null);
@@ -173,61 +174,100 @@ export default function PoliceExport() {
               <Shield className="h-8 w-8 text-primary" />
               Police Verification Export
             </h1>
-            <p className="text-muted-foreground">
-              One-click export for police verification compliance
+            <p className="text-muted-foreground mt-1">
+              Statutory compliance documentation for law enforcement
             </p>
           </div>
         </div>
 
         {/* Legal Compliance Notice */}
-        <Alert>
-          <Shield className="h-4 w-4" />
-          <AlertTitle>Legal Compliance</AlertTitle>
-          <AlertDescription>
-            As per government regulations, all guest information including ID proof must be 
-            submitted to local police for verification. This tool helps you generate the 
-            required documentation quickly and securely.
+        <Alert className="border-l-4 border-l-warning bg-warning/5">
+          <Scale className="h-5 w-5 text-warning" />
+          <AlertTitle className="font-semibold">Statutory Compliance Notice</AlertTitle>
+          <AlertDescription className="mt-2">
+            As per the <strong>Registration of Foreigners Act, 1939</strong> and state police regulations, 
+            all lodging establishments must maintain and submit guest records including government-issued 
+            ID proof for verification. Non-compliance may result in penalties.
           </AlertDescription>
         </Alert>
 
+        {/* Stats Row */}
+        <div className="grid gap-4 md:grid-cols-3">
+          <Card className="border-l-4 border-l-primary">
+            <CardContent className="flex items-center gap-4 p-5">
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10">
+                <Users className="h-6 w-6 text-primary" />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Total Records</p>
+                <p className="text-2xl font-bold">{guestRecords.length}</p>
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="border-l-4 border-l-success">
+            <CardContent className="flex items-center gap-4 p-5">
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-success/10">
+                <Check className="h-6 w-6 text-success" />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Complete ID Records</p>
+                <p className="text-2xl font-bold text-success">{completeRecords}</p>
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="border-l-4 border-l-info">
+            <CardContent className="flex items-center gap-4 p-5">
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-info/10">
+                <Download className="h-6 w-6 text-info" />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Selected for Export</p>
+                <p className="text-2xl font-bold text-info">{selectedBookings.length}</p>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
         {/* Date Range Selection */}
         <Card>
-          <CardHeader>
+          <CardHeader className="border-b">
             <CardTitle className="flex items-center gap-2">
-              <Calendar className="h-5 w-5" />
-              Select Date Range
+              <Calendar className="h-5 w-5 text-primary" />
+              Report Period Selection
             </CardTitle>
             <CardDescription>
-              Choose the date range for guest records to export
+              Specify the date range for guest records to include in the report
             </CardDescription>
           </CardHeader>
-          <CardContent>
-            <div className="flex flex-col gap-4 md:flex-row md:items-end">
+          <CardContent className="pt-6">
+            <div className="flex flex-col gap-6 md:flex-row md:items-end">
               <div className="space-y-2">
-                <Label htmlFor="startDate">Start Date</Label>
+                <Label htmlFor="startDate" className="font-medium">From Date</Label>
                 <Input
                   id="startDate"
                   type="date"
                   value={startDate}
                   onChange={(e) => setStartDate(e.target.value)}
+                  className="w-48"
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="endDate">End Date</Label>
+                <Label htmlFor="endDate" className="font-medium">To Date</Label>
                 <Input
                   id="endDate"
                   type="date"
                   value={endDate}
                   onChange={(e) => setEndDate(e.target.value)}
+                  className="w-48"
                 />
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-3 pb-1">
                 <Checkbox
                   id="includeIdImages"
                   checked={includeIdImages}
                   onCheckedChange={(checked) => setIncludeIdImages(checked as boolean)}
                 />
-                <Label htmlFor="includeIdImages" className="cursor-pointer">
+                <Label htmlFor="includeIdImages" className="cursor-pointer text-sm">
                   Include ID proof images in detailed report
                 </Label>
               </div>
@@ -237,89 +277,95 @@ export default function PoliceExport() {
 
         {/* Guest Records */}
         <Card>
-          <CardHeader>
+          <CardHeader className="border-b">
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle>Guest Records</CardTitle>
+                <CardTitle className="flex items-center gap-2">
+                  <Users className="h-5 w-5 text-primary" />
+                  Guest Records for Export
+                </CardTitle>
                 <CardDescription>
-                  {guestRecords.length} guests found in selected date range
+                  {guestRecords.length} guest{guestRecords.length !== 1 ? 's' : ''} found for the selected period
                 </CardDescription>
               </div>
-              <div className="flex gap-2">
-                <Button variant="outline" onClick={handleSelectAll}>
-                  {selectedBookings.length === guestRecords.length ? 'Deselect All' : 'Select All'}
-                </Button>
-              </div>
+              <Button variant="outline" onClick={handleSelectAll}>
+                {selectedBookings.length === guestRecords.length ? 'Deselect All' : 'Select All'}
+              </Button>
             </div>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-0">
             {guestRecords.length === 0 ? (
-              <div className="py-12 text-center text-muted-foreground">
+              <div className="py-16 text-center">
                 <AlertTriangle className="mx-auto h-12 w-12 mb-4 text-muted-foreground/50" />
-                <p>No guest records found for the selected date range</p>
+                <p className="text-lg font-medium text-muted-foreground">No Guest Records Found</p>
+                <p className="text-sm text-muted-foreground/70 mt-1">
+                  No check-ins recorded for the selected date range
+                </p>
               </div>
             ) : (
-              <div className="rounded-lg border overflow-x-auto">
+              <div className="overflow-x-auto">
                 <Table>
                   <TableHeader>
-                    <TableRow>
+                    <TableRow className="bg-muted/50">
                       <TableHead className="w-12">
                         <Checkbox
                           checked={selectedBookings.length === guestRecords.length && guestRecords.length > 0}
                           onCheckedChange={handleSelectAll}
                         />
                       </TableHead>
-                      <TableHead>Room</TableHead>
-                      <TableHead>Guest Name</TableHead>
-                      <TableHead>Phone</TableHead>
-                      <TableHead>ID Type</TableHead>
-                      <TableHead>ID Number</TableHead>
-                      <TableHead>Check-in</TableHead>
-                      <TableHead>Check-out</TableHead>
-                      <TableHead>ID Proof</TableHead>
+                      <TableHead className="font-semibold">Room</TableHead>
+                      <TableHead className="font-semibold">Guest Name</TableHead>
+                      <TableHead className="font-semibold">Contact</TableHead>
+                      <TableHead className="font-semibold">ID Type</TableHead>
+                      <TableHead className="font-semibold">ID Number</TableHead>
+                      <TableHead className="font-semibold">Check-in</TableHead>
+                      <TableHead className="font-semibold">Check-out</TableHead>
+                      <TableHead className="font-semibold">ID Status</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {guestRecords.map((record) => (
-                      <TableRow key={record.bookingId}>
+                      <TableRow key={record.bookingId} className="hover:bg-muted/30">
                         <TableCell>
                           <Checkbox
                             checked={selectedBookings.includes(record.bookingId)}
                             onCheckedChange={() => handleToggleBooking(record.bookingId)}
                           />
                         </TableCell>
-                        <TableCell className="font-medium">{record.roomNumber}</TableCell>
+                        <TableCell className="font-semibold text-primary">{record.roomNumber}</TableCell>
                         <TableCell>
                           <div>
                             <p className="font-medium">{record.guestName}</p>
                             {record.additionalGuests > 0 && (
                               <p className="text-xs text-muted-foreground">
-                                +{record.additionalGuests} additional
+                                +{record.additionalGuests} accompanying guest{record.additionalGuests !== 1 ? 's' : ''}
                               </p>
                             )}
                           </div>
                         </TableCell>
-                        <TableCell>{record.phone}</TableCell>
+                        <TableCell className="text-sm">{record.phone}</TableCell>
                         <TableCell>
-                          <Badge variant="secondary">{record.idType}</Badge>
+                          <Badge variant="secondary" className="font-medium">{record.idType}</Badge>
                         </TableCell>
                         <TableCell className="font-mono text-sm">{record.idNumber}</TableCell>
-                        <TableCell>{format(parseISO(record.checkIn), 'MMM d, h:mm a')}</TableCell>
-                        <TableCell>{format(parseISO(record.checkOut), 'MMM d, h:mm a')}</TableCell>
                         <TableCell>
-                          <div className="flex gap-1">
-                            {record.hasIdFront && record.hasIdBack ? (
-                              <Badge variant="default" className="bg-success">
-                                <Check className="mr-1 h-3 w-3" />
-                                Complete
-                              </Badge>
-                            ) : (
-                              <Badge variant="destructive">
-                                <AlertTriangle className="mr-1 h-3 w-3" />
-                                Missing
-                              </Badge>
-                            )}
-                          </div>
+                          <span className="text-sm">{format(parseISO(record.checkIn), 'dd MMM, h:mm a')}</span>
+                        </TableCell>
+                        <TableCell>
+                          <span className="text-sm">{format(parseISO(record.checkOut), 'dd MMM, h:mm a')}</span>
+                        </TableCell>
+                        <TableCell>
+                          {record.hasIdFront && record.hasIdBack ? (
+                            <Badge className="bg-success hover:bg-success/90 font-medium">
+                              <Check className="mr-1 h-3 w-3" />
+                              Verified
+                            </Badge>
+                          ) : (
+                            <Badge variant="destructive" className="font-medium">
+                              <AlertTriangle className="mr-1 h-3 w-3" />
+                              Incomplete
+                            </Badge>
+                          )}
                         </TableCell>
                       </TableRow>
                     ))}
@@ -332,20 +378,20 @@ export default function PoliceExport() {
 
         {/* Export Actions */}
         <Card>
-          <CardHeader>
+          <CardHeader className="border-b">
             <CardTitle className="flex items-center gap-2">
-              <Download className="h-5 w-5" />
+              <Download className="h-5 w-5 text-primary" />
               Export Options
             </CardTitle>
             <CardDescription>
-              {selectedBookings.length} records selected for export
+              {selectedBookings.length} record{selectedBookings.length !== 1 ? 's' : ''} selected for export
             </CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="pt-6">
             <div className="grid gap-4 md:grid-cols-3">
               <Button
                 size="lg"
-                className="h-auto flex-col gap-2 py-6"
+                className="h-auto flex-col gap-3 py-8"
                 onClick={handleExportPDF}
                 disabled={selectedBookings.length === 0 || isExporting !== null}
               >
@@ -355,9 +401,9 @@ export default function PoliceExport() {
                   <FileText className="h-8 w-8" />
                 )}
                 <div className="text-center">
-                  <p className="font-semibold">Export as PDF</p>
-                  <p className="text-xs text-primary-foreground/70">
-                    Summary guest list
+                  <p className="font-semibold">Standard Report (PDF)</p>
+                  <p className="text-xs text-primary-foreground/70 mt-1">
+                    Summary guest list for police station
                   </p>
                 </div>
               </Button>
@@ -365,7 +411,7 @@ export default function PoliceExport() {
               <Button
                 size="lg"
                 variant="secondary"
-                className="h-auto flex-col gap-2 py-6"
+                className="h-auto flex-col gap-3 py-8"
                 onClick={handleExportExcel}
                 disabled={selectedBookings.length === 0 || isExporting !== null}
               >
@@ -375,9 +421,9 @@ export default function PoliceExport() {
                   <FileText className="h-8 w-8" />
                 )}
                 <div className="text-center">
-                  <p className="font-semibold">Export as Excel</p>
-                  <p className="text-xs text-secondary-foreground/70">
-                    Spreadsheet format (CSV)
+                  <p className="font-semibold">Excel Spreadsheet</p>
+                  <p className="text-xs text-secondary-foreground/70 mt-1">
+                    CSV format for digital records
                   </p>
                 </div>
               </Button>
@@ -385,7 +431,7 @@ export default function PoliceExport() {
               <Button
                 size="lg"
                 variant="outline"
-                className="h-auto flex-col gap-2 py-6"
+                className="h-auto flex-col gap-3 py-8"
                 onClick={handleExportDetailedPDF}
                 disabled={selectedBookings.length === 0 || isExporting !== null}
               >
@@ -396,8 +442,8 @@ export default function PoliceExport() {
                 )}
                 <div className="text-center">
                   <p className="font-semibold">Detailed Report</p>
-                  <p className="text-xs text-muted-foreground">
-                    Full details with addresses
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Complete records with ID images
                   </p>
                 </div>
               </Button>
