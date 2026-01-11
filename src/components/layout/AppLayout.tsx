@@ -1,7 +1,6 @@
 import { ReactNode, useState, useEffect } from 'react';
 import { AppSidebar } from './AppSidebar';
-import { Badge } from '@/components/ui/badge';
-import { WifiOff, Wifi } from 'lucide-react';
+import { WifiOff } from 'lucide-react';
 
 interface AppLayoutProps {
   children: ReactNode;
@@ -26,18 +25,17 @@ export function AppLayout({ children }: AppLayoutProps) {
   return (
     <div className="min-h-screen bg-background">
       <AppSidebar />
-      <main className="pl-16 transition-all duration-300 md:pl-64">
-        {/* Connection Status Banner */}
+      <main className="pl-16 transition-all duration-200 md:pl-64">
         {!isOnline && (
           <div className="bg-warning/10 border-b border-warning/30 px-4 py-2 flex items-center justify-center gap-2">
             <WifiOff className="h-4 w-4 text-warning" />
-            <span className="text-sm font-medium text-warning">
-              Offline Mode — Changes will sync when connection is restored
+            <span className="text-xs font-medium text-warning">
+              Offline — Changes will sync when connected
             </span>
           </div>
         )}
         
-        <div className="container mx-auto max-w-7xl px-4 py-6 md:px-6 lg:px-8">
+        <div className="container mx-auto max-w-7xl px-4 py-4 md:px-6">
           {children}
         </div>
       </main>
