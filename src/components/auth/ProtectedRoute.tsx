@@ -4,11 +4,10 @@ import { Loader2 } from 'lucide-react';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
-  requireAdmin?: boolean;
 }
 
-export function ProtectedRoute({ children, requireAdmin = false }: ProtectedRouteProps) {
-  const { user, loading, userRole } = useAuth();
+export function ProtectedRoute({ children }: ProtectedRouteProps) {
+  const { user, loading, isAdmin } = useAuth();
 
   if (loading) {
     return (
@@ -22,25 +21,13 @@ export function ProtectedRoute({ children, requireAdmin = false }: ProtectedRout
     return <Navigate to="/login" replace />;
   }
 
-  // Check if user has any role (staff or admin)
-  if (!userRole) {
+  // Only admin users can access the system
+  if (!isAdmin) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center gap-4 p-4 text-center">
         <h1 className="text-2xl font-bold text-destructive">Access Denied</h1>
         <p className="text-muted-foreground">
-          Your account does not have access to this system. Please contact an administrator.
-        </p>
-      </div>
-    );
-  }
-
-  // Check admin requirement
-  if (requireAdmin && userRole !== 'admin') {
-    return (
-      <div className="flex min-h-screen flex-col items-center justify-center gap-4 p-4 text-center">
-        <h1 className="text-2xl font-bold text-destructive">Admin Access Required</h1>
-        <p className="text-muted-foreground">
-          This section requires administrator privileges.
+          Only administrators can access this system.
         </p>
       </div>
     );

@@ -86,7 +86,7 @@ const App = () => (
             <Route
               path="/settings"
               element={
-                <ProtectedRoute requireAdmin>
+                <ProtectedRoute>
                   <Settings />
                 </ProtectedRoute>
               }
