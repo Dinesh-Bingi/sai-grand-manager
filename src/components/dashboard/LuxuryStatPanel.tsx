@@ -25,8 +25,8 @@ export function LuxuryStatPanel({
         {icon}
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-medium text-muted-foreground">{title}</p>
-        <p className="mt-1 font-serif text-3xl font-medium text-foreground tracking-tight">
+        <p className="text-sm font-semibold text-muted-foreground">{title}</p>
+        <p className="mt-1 text-3xl font-bold text-foreground tracking-tight">
           {value}
         </p>
         {subtitle && (
