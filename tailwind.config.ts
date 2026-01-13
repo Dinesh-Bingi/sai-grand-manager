@@ -68,7 +68,11 @@ export default {
         info: {
           DEFAULT: 'hsl(var(--info))',
           foreground: 'hsl(var(--info-foreground))'
-        }
+        },
+        gold: 'hsl(var(--gold))',
+        bronze: 'hsl(var(--bronze))',
+        ivory: 'hsl(var(--ivory))',
+        charcoal: 'hsl(var(--charcoal))'
       },
       borderRadius: {
         lg: 'var(--radius)',
@@ -109,7 +113,19 @@ export default {
           'Helvetica Neue',
           'Arial',
           'sans-serif'
+        ],
+        serif: [
+          'Playfair Display',
+          'Georgia',
+          'Cambria',
+          'Times New Roman',
+          'Times',
+          'serif'
         ]
+      },
+      spacing: {
+        '18': '4.5rem',
+        '22': '5.5rem'
       }
     }
   },

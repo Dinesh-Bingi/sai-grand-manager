@@ -1,126 +1,141 @@
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap");
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* Sai Grand Lodge - Corporate Professional Design System */
+/* Sai Grand Lodge - Luxury Hospitality Design System */
+/* Inspired by 5-star hotel interfaces: ITC, Taj, Oberoi */
 
 @layer base {
   :root {
-    /* Corporate neutral palette */
-    --background: 0 0% 98%;
-    --foreground: 220 20% 15%;
+    /* Luxury warm palette - ivory & cream backgrounds */
+    --background: 40 30% 97%;
+    --foreground: 25 25% 18%;
 
-    --card: 0 0% 100%;
-    --card-foreground: 220 20% 15%;
+    /* Warm cream cards */
+    --card: 40 40% 99%;
+    --card-foreground: 25 25% 18%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 220 20% 15%;
+    --popover: 40 40% 99%;
+    --popover-foreground: 25 25% 18%;
 
-    /* Professional blue primary */
-    --primary: 220 65% 45%;
-    --primary-foreground: 0 0% 100%;
+    /* Muted gold primary - elegant, not loud */
+    --primary: 38 45% 42%;
+    --primary-foreground: 40 40% 99%;
 
-    /* Slate secondary */
-    --secondary: 220 15% 92%;
-    --secondary-foreground: 220 20% 15%;
+    /* Warm ivory secondary */
+    --secondary: 35 30% 94%;
+    --secondary-foreground: 25 25% 25%;
 
-    --muted: 220 15% 95%;
-    --muted-foreground: 220 10% 45%;
+    /* Soft muted tones */
+    --muted: 35 20% 93%;
+    --muted-foreground: 25 15% 50%;
 
-    /* Subtle accent */
-    --accent: 220 15% 92%;
-    --accent-foreground: 220 20% 15%;
+    /* Subtle warm accent */
+    --accent: 35 25% 92%;
+    --accent-foreground: 25 25% 22%;
 
-    /* Status colors */
-    --success: 142 70% 40%;
-    --success-foreground: 0 0% 100%;
+    /* Status colors - muted, professional */
+    --success: 145 40% 42%;
+    --success-foreground: 40 40% 99%;
     
-    --warning: 38 95% 50%;
-    --warning-foreground: 220 20% 15%;
+    --warning: 38 60% 55%;
+    --warning-foreground: 25 25% 18%;
 
-    --destructive: 0 75% 55%;
-    --destructive-foreground: 0 0% 100%;
+    --destructive: 0 50% 50%;
+    --destructive-foreground: 40 40% 99%;
 
-    --info: 200 85% 50%;
-    --info-foreground: 0 0% 100%;
+    --info: 200 40% 50%;
+    --info-foreground: 40 40% 99%;
 
-    --border: 220 15% 88%;
-    --input: 220 15% 88%;
-    --ring: 220 65% 45%;
+    /* Warm borders */
+    --border: 35 20% 88%;
+    --input: 35 20% 88%;
+    --ring: 38 45% 42%;
 
-    --radius: 0.375rem;
+    --radius: 0.5rem;
 
-    /* Sidebar - Corporate dark */
-    --sidebar-background: 220 20% 18%;
-    --sidebar-foreground: 220 10% 90%;
-    --sidebar-primary: 220 65% 55%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 220 20% 25%;
-    --sidebar-accent-foreground: 220 10% 90%;
-    --sidebar-border: 220 20% 25%;
-    --sidebar-ring: 220 65% 55%;
+    /* Sidebar - warm charcoal with brown undertones */
+    --sidebar-background: 30 20% 15%;
+    --sidebar-foreground: 35 25% 90%;
+    --sidebar-primary: 38 50% 55%;
+    --sidebar-primary-foreground: 40 40% 99%;
+    --sidebar-accent: 30 20% 22%;
+    --sidebar-accent-foreground: 35 25% 92%;
+    --sidebar-border: 30 15% 25%;
+    --sidebar-ring: 38 50% 55%;
 
-    /* Charts */
-    --chart-1: 220 65% 45%;
-    --chart-2: 142 70% 40%;
-    --chart-3: 38 95% 50%;
-    --chart-4: 200 85% 50%;
-    --chart-5: 0 75% 55%;
+    /* Charts - muted palette */
+    --chart-1: 38 45% 42%;
+    --chart-2: 145 40% 42%;
+    --chart-3: 38 60% 55%;
+    --chart-4: 200 40% 50%;
+    --chart-5: 0 50% 50%;
+
+    /* Luxury specific tokens */
+    --gold: 38 50% 50%;
+    --bronze: 25 40% 45%;
+    --ivory: 40 40% 97%;
+    --charcoal: 25 25% 18%;
   }
 
   .dark {
-    --background: 220 20% 10%;
-    --foreground: 220 10% 95%;
+    --background: 25 20% 10%;
+    --foreground: 35 25% 92%;
 
-    --card: 220 20% 14%;
-    --card-foreground: 220 10% 95%;
+    --card: 25 20% 12%;
+    --card-foreground: 35 25% 92%;
 
-    --popover: 220 20% 14%;
-    --popover-foreground: 220 10% 95%;
+    --popover: 25 20% 12%;
+    --popover-foreground: 35 25% 92%;
 
-    --primary: 220 65% 55%;
-    --primary-foreground: 0 0% 100%;
+    --primary: 38 50% 55%;
+    --primary-foreground: 25 25% 10%;
 
-    --secondary: 220 20% 22%;
-    --secondary-foreground: 220 10% 95%;
+    --secondary: 25 20% 18%;
+    --secondary-foreground: 35 25% 90%;
 
-    --muted: 220 20% 18%;
-    --muted-foreground: 220 10% 55%;
+    --muted: 25 20% 16%;
+    --muted-foreground: 35 15% 55%;
 
-    --accent: 220 20% 22%;
-    --accent-foreground: 220 10% 95%;
+    --accent: 25 20% 18%;
+    --accent-foreground: 35 25% 92%;
 
-    --success: 142 70% 45%;
-    --success-foreground: 0 0% 100%;
+    --success: 145 45% 48%;
+    --success-foreground: 25 25% 10%;
     
-    --warning: 38 95% 55%;
-    --warning-foreground: 220 20% 15%;
+    --warning: 38 65% 58%;
+    --warning-foreground: 25 25% 10%;
 
-    --destructive: 0 75% 60%;
-    --destructive-foreground: 0 0% 100%;
+    --destructive: 0 55% 55%;
+    --destructive-foreground: 40 40% 99%;
 
-    --info: 200 85% 55%;
-    --info-foreground: 0 0% 100%;
+    --info: 200 45% 55%;
+    --info-foreground: 25 25% 10%;
 
-    --border: 220 20% 22%;
-    --input: 220 20% 22%;
-    --ring: 220 65% 55%;
+    --border: 25 20% 22%;
+    --input: 25 20% 22%;
+    --ring: 38 50% 55%;
 
-    --sidebar-background: 220 20% 8%;
-    --sidebar-foreground: 220 10% 90%;
-    --sidebar-primary: 220 65% 55%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 220 20% 16%;
-    --sidebar-accent-foreground: 220 10% 90%;
-    --sidebar-border: 220 20% 15%;
-    --sidebar-ring: 220 65% 55%;
+    --sidebar-background: 25 20% 8%;
+    --sidebar-foreground: 35 25% 90%;
+    --sidebar-primary: 38 50% 55%;
+    --sidebar-primary-foreground: 25 25% 10%;
+    --sidebar-accent: 25 20% 14%;
+    --sidebar-accent-foreground: 35 25% 92%;
+    --sidebar-border: 25 20% 18%;
+    --sidebar-ring: 38 50% 55%;
 
-    --chart-1: 220 65% 55%;
-    --chart-2: 142 70% 50%;
-    --chart-3: 38 95% 55%;
-    --chart-4: 200 85% 55%;
-    --chart-5: 0 75% 60%;
+    --chart-1: 38 50% 55%;
+    --chart-2: 145 45% 48%;
+    --chart-3: 38 65% 58%;
+    --chart-4: 200 45% 55%;
+    --chart-5: 0 55% 55%;
+
+    --gold: 38 55% 55%;
+    --bronze: 25 45% 50%;
+    --ivory: 35 25% 92%;
+    --charcoal: 25 25% 18%;
   }
 }
 
@@ -130,40 +145,78 @@
   }
 
   body {
-    @apply bg-background text-foreground font-sans antialiased;
+    @apply bg-background text-foreground antialiased;
+    font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
   }
 
-  h1, h2, h3, h4, h5, h6 {
+  /* Serif headings for luxury feel */
+  h1, h2, h3 {
+    font-family: 'Playfair Display', Georgia, serif;
+    @apply font-medium tracking-tight;
+  }
+
+  h4, h5, h6 {
     @apply font-semibold tracking-tight;
   }
 }
 
 @layer utilities {
-  .animate-pulse-soft {
-    animation: pulse-soft 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  .font-serif {
+    font-family: 'Playfair Display', Georgia, serif;
   }
 
-  @keyframes pulse-soft {
-    0%, 100% {
-      opacity: 1;
-    }
-    50% {
-      opacity: 0.7;
-    }
+  .font-sans {
+    font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
   }
 
-  .animate-slide-in {
-    animation: slide-in 0.2s ease-out;
+  /* Subtle animations */
+  .animate-fade-in {
+    animation: fade-in 0.3s ease-out;
   }
 
-  @keyframes slide-in {
+  @keyframes fade-in {
     from {
       opacity: 0;
-      transform: translateY(-8px);
+      transform: translateY(4px);
     }
     to {
       opacity: 1;
       transform: translateY(0);
     }
+  }
+
+  /* Gold gradient for special elements */
+  .gradient-gold {
+    background: linear-gradient(135deg, hsl(38 50% 50%) 0%, hsl(25 40% 45%) 100%);
+  }
+
+  /* Soft shadow for luxury cards */
+  .shadow-luxury {
+    box-shadow: 0 2px 8px -2px hsl(25 20% 50% / 0.08), 
+                0 4px 16px -4px hsl(25 20% 50% / 0.06);
+  }
+
+  .shadow-luxury-hover {
+    box-shadow: 0 4px 12px -3px hsl(25 20% 50% / 0.12), 
+                0 8px 24px -6px hsl(25 20% 50% / 0.08);
+  }
+}
+
+@layer components {
+  /* Room status indicator colors - muted */
+  .room-available {
+    @apply bg-success/15 border-success/30 text-success;
+  }
+  
+  .room-occupied {
+    @apply bg-primary/15 border-primary/30 text-primary;
+  }
+  
+  .room-cleaning {
+    @apply bg-warning/15 border-warning/30 text-warning;
+  }
+  
+  .room-maintenance {
+    @apply bg-muted border-border text-muted-foreground;
   }
 }
