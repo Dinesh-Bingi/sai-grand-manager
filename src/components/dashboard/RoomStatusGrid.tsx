@@ -61,12 +61,12 @@ export function RoomStatusGrid({ rooms, className }: RoomStatusGridProps) {
     <div className={cn('rounded-xl border border-border/50 bg-card shadow-luxury', className)}>
       {/* Header with legend */}
       <div className="flex flex-wrap items-center justify-between gap-4 border-b border-border/50 px-6 py-4">
-        <h2 className="font-serif text-xl font-medium text-foreground">Room Status</h2>
+        <h2 className="text-lg font-bold text-foreground">Room Status</h2>
         <div className="flex flex-wrap items-center gap-4">
           {Object.entries(statusConfig).map(([status, config]) => (
             <div key={status} className="flex items-center gap-2">
               <span className={cn('h-2.5 w-2.5 rounded-full', config.dot)} />
-              <span className="text-xs text-muted-foreground">{config.label}</span>
+              <span className="text-xs font-medium text-muted-foreground">{config.label}</span>
             </div>
           ))}
         </div>
@@ -84,7 +84,7 @@ export function RoomStatusGrid({ rooms, className }: RoomStatusGridProps) {
                   <div
                     key={room.id}
                     className={cn(
-                      'flex h-10 w-14 items-center justify-center rounded-md border text-sm font-medium transition-all hover:scale-105',
+                      'flex h-10 w-14 items-center justify-center rounded-md border text-sm font-bold transition-all hover:scale-105',
                       config.bg,
                       config.border
                     )}
@@ -101,17 +101,17 @@ export function RoomStatusGrid({ rooms, className }: RoomStatusGridProps) {
       {/* Footer summary */}
       <div className="flex flex-wrap items-center justify-between gap-4 border-t border-border/50 px-6 py-4">
         <p className="text-sm text-muted-foreground">
-          <span className="font-medium text-foreground">{totalRooms}</span> Rooms Total
+          <span className="font-bold text-foreground">{totalRooms}</span> Rooms Total
           <span className="mx-2">|</span>
-          <span className="font-medium text-foreground">{occupiedRooms}</span> Rooms Occupied ({occupancyPercentage}% Occupancy)
+          <span className="font-bold text-foreground">{occupiedRooms}</span> Rooms Occupied ({occupancyPercentage}% Occupancy)
           {cleaningRooms > 0 && (
             <>
               <span className="mx-2">|</span>
-              <span className="font-medium text-foreground">{cleaningRooms}</span> Cleaning
+              <span className="font-bold text-foreground">{cleaningRooms}</span> Cleaning
             </>
           )}
         </p>
-        <Button asChild variant="outline" size="sm" className="gap-1">
+        <Button asChild variant="outline" size="sm" className="gap-1 font-semibold">
           <Link to="/rooms">
             View All Room Status
             <ChevronRight className="h-4 w-4" />

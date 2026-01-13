@@ -23,6 +23,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
+import lodgeImage from '@/assets/lodge-building.webp';
 
 const navItems = [
   { icon: LayoutDashboard, label: 'Dashboard', path: '/' },
@@ -55,7 +56,7 @@ export function AppSidebar() {
         className={cn(
           'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-all',
           isActive
-            ? 'bg-sidebar-accent text-sidebar-primary font-medium'
+            ? 'bg-sidebar-accent text-sidebar-primary font-semibold'
             : 'text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground',
           collapsed && 'justify-center px-2'
         )}
@@ -69,7 +70,7 @@ export function AppSidebar() {
       return (
         <Tooltip key={item.path} delayDuration={0}>
           <TooltipTrigger asChild>{navButton}</TooltipTrigger>
-          <TooltipContent side="right" className="font-medium">
+          <TooltipContent side="right" className="font-semibold">
             {item.label}
           </TooltipContent>
         </Tooltip>
@@ -87,24 +88,39 @@ export function AppSidebar() {
       )}
     >
       <div className="flex h-full flex-col">
-        {/* Logo */}
+        {/* Logo with Lodge Image */}
         <div className={cn(
-          'flex items-center gap-3 border-b border-sidebar-border px-4 py-5',
-          collapsed && 'justify-center px-2'
+          'relative border-b border-sidebar-border overflow-hidden',
+          collapsed ? 'h-16' : 'h-28'
         )}>
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-sidebar-primary/20">
-            <Building2 className="h-5 w-5 text-sidebar-primary" />
-          </div>
           {!collapsed && (
-            <div className="flex flex-col">
-              <span className="font-serif text-lg font-medium text-sidebar-foreground">
-                Sai Grand Lodge
-              </span>
-              <span className="text-[10px] text-sidebar-foreground/50">
-                Surendrapuri, Yadagirigutta
-              </span>
-            </div>
+            <>
+              <img 
+                src={lodgeImage} 
+                alt="Sai Grand Lodge"
+                className="absolute inset-0 h-full w-full object-cover opacity-30"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-sidebar via-sidebar/90 to-transparent" />
+            </>
           )}
+          <div className={cn(
+            'relative z-10 flex items-center gap-3 h-full',
+            collapsed ? 'justify-center px-2' : 'px-4 pb-3 pt-4'
+          )}>
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-sidebar-primary/20">
+              <Building2 className="h-5 w-5 text-sidebar-primary" />
+            </div>
+            {!collapsed && (
+              <div className="flex flex-col">
+                <span className="text-base font-bold text-sidebar-foreground">
+                  Sai Grand Lodge
+                </span>
+                <span className="text-[10px] text-sidebar-foreground/50">
+                  Surendrapuri, Yadagirigutta
+                </span>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Main Navigation */}

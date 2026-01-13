@@ -103,24 +103,17 @@ export default {
       },
       fontFamily: {
         sans: [
-          'Inter',
+          'Arial',
+          'Helvetica',
           'ui-sans-serif',
           'system-ui',
           '-apple-system',
-          'BlinkMacSystemFont',
-          'Segoe UI',
-          'Roboto',
-          'Helvetica Neue',
-          'Arial',
           'sans-serif'
         ],
         serif: [
-          'Playfair Display',
-          'Georgia',
-          'Cambria',
-          'Times New Roman',
-          'Times',
-          'serif'
+          'Arial',
+          'Helvetica',
+          'sans-serif'
         ]
       },
       spacing: {
