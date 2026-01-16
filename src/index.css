@@ -1,0 +1,216 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Sai Grand Lodge - Professional Hospitality Design System */
+
+@layer base {
+  :root {
+    /* Luxury warm palette - ivory & cream backgrounds */
+    --background: 40 30% 97%;
+    --foreground: 25 25% 18%;
+
+    /* Warm cream cards */
+    --card: 40 40% 99%;
+    --card-foreground: 25 25% 18%;
+
+    --popover: 40 40% 99%;
+    --popover-foreground: 25 25% 18%;
+
+    /* Muted gold primary - elegant, not loud */
+    --primary: 38 45% 42%;
+    --primary-foreground: 40 40% 99%;
+
+    /* Warm ivory secondary */
+    --secondary: 35 30% 94%;
+    --secondary-foreground: 25 25% 25%;
+
+    /* Soft muted tones */
+    --muted: 35 20% 93%;
+    --muted-foreground: 25 15% 50%;
+
+    /* Subtle warm accent */
+    --accent: 35 25% 92%;
+    --accent-foreground: 25 25% 22%;
+
+    /* Status colors - muted, professional */
+    --success: 145 40% 42%;
+    --success-foreground: 40 40% 99%;
+    
+    --warning: 38 60% 55%;
+    --warning-foreground: 25 25% 18%;
+
+    --destructive: 0 50% 50%;
+    --destructive-foreground: 40 40% 99%;
+
+    --info: 200 40% 50%;
+    --info-foreground: 40 40% 99%;
+
+    /* Warm borders */
+    --border: 35 20% 88%;
+    --input: 35 20% 88%;
+    --ring: 38 45% 42%;
+
+    --radius: 0.5rem;
+
+    /* Sidebar - warm charcoal with brown undertones */
+    --sidebar-background: 30 20% 15%;
+    --sidebar-foreground: 35 25% 90%;
+    --sidebar-primary: 38 50% 55%;
+    --sidebar-primary-foreground: 40 40% 99%;
+    --sidebar-accent: 30 20% 22%;
+    --sidebar-accent-foreground: 35 25% 92%;
+    --sidebar-border: 30 15% 25%;
+    --sidebar-ring: 38 50% 55%;
+
+    /* Charts - muted palette */
+    --chart-1: 38 45% 42%;
+    --chart-2: 145 40% 42%;
+    --chart-3: 38 60% 55%;
+    --chart-4: 200 40% 50%;
+    --chart-5: 0 50% 50%;
+
+    /* Luxury specific tokens */
+    --gold: 38 50% 50%;
+    --bronze: 25 40% 45%;
+    --ivory: 40 40% 97%;
+    --charcoal: 25 25% 18%;
+  }
+
+  .dark {
+    --background: 25 20% 10%;
+    --foreground: 35 25% 92%;
+
+    --card: 25 20% 12%;
+    --card-foreground: 35 25% 92%;
+
+    --popover: 25 20% 12%;
+    --popover-foreground: 35 25% 92%;
+
+    --primary: 38 50% 55%;
+    --primary-foreground: 25 25% 10%;
+
+    --secondary: 25 20% 18%;
+    --secondary-foreground: 35 25% 90%;
+
+    --muted: 25 20% 16%;
+    --muted-foreground: 35 15% 55%;
+
+    --accent: 25 20% 18%;
+    --accent-foreground: 35 25% 92%;
+
+    --success: 145 45% 48%;
+    --success-foreground: 25 25% 10%;
+    
+    --warning: 38 65% 58%;
+    --warning-foreground: 25 25% 10%;
+
+    --destructive: 0 55% 55%;
+    --destructive-foreground: 40 40% 99%;
+
+    --info: 200 45% 55%;
+    --info-foreground: 25 25% 10%;
+
+    --border: 25 20% 22%;
+    --input: 25 20% 22%;
+    --ring: 38 50% 55%;
+
+    --sidebar-background: 25 20% 8%;
+    --sidebar-foreground: 35 25% 90%;
+    --sidebar-primary: 38 50% 55%;
+    --sidebar-primary-foreground: 25 25% 10%;
+    --sidebar-accent: 25 20% 14%;
+    --sidebar-accent-foreground: 35 25% 92%;
+    --sidebar-border: 25 20% 18%;
+    --sidebar-ring: 38 50% 55%;
+
+    --chart-1: 38 50% 55%;
+    --chart-2: 145 45% 48%;
+    --chart-3: 38 65% 58%;
+    --chart-4: 200 45% 55%;
+    --chart-5: 0 55% 55%;
+
+    --gold: 38 55% 55%;
+    --bronze: 25 45% 50%;
+    --ivory: 35 25% 92%;
+    --charcoal: 25 25% 18%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-family: Arial, Helvetica, sans-serif;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: Arial, Helvetica, sans-serif;
+    @apply font-bold tracking-tight;
+  }
+}
+
+@layer utilities {
+  .font-serif {
+    font-family: Arial, Helvetica, sans-serif;
+    font-weight: 700;
+  }
+
+  .font-sans {
+    font-family: Arial, Helvetica, sans-serif;
+  }
+
+  /* Subtle animations */
+  .animate-fade-in {
+    animation: fade-in 0.3s ease-out;
+  }
+
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+      transform: translateY(4px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* Gold gradient for special elements */
+  .gradient-gold {
+    background: linear-gradient(135deg, hsl(38 50% 50%) 0%, hsl(25 40% 45%) 100%);
+  }
+
+  /* Soft shadow for luxury cards */
+  .shadow-luxury {
+    box-shadow: 0 2px 8px -2px hsl(25 20% 50% / 0.08), 
+                0 4px 16px -4px hsl(25 20% 50% / 0.06);
+  }
+
+  .shadow-luxury-hover {
+    box-shadow: 0 4px 12px -3px hsl(25 20% 50% / 0.12), 
+                0 8px 24px -6px hsl(25 20% 50% / 0.08);
+  }
+}
+
+@layer components {
+  /* Room status indicator colors - muted */
+  .room-available {
+    @apply bg-success/15 border-success/30 text-success;
+  }
+  
+  .room-occupied {
+    @apply bg-primary/15 border-primary/30 text-primary;
+  }
+  
+  .room-cleaning {
+    @apply bg-warning/15 border-warning/30 text-warning;
+  }
+  
+  .room-maintenance {
+    @apply bg-muted border-border text-muted-foreground;
+  }
+}
