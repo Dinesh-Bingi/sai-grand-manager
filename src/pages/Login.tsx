@@ -1,16 +1,81 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { z } from "zod";
+import { useAuth } from "../hooks/useAuth";
+
+const authSchema = z.object({
+  email: z.string().trim().email({ message: "Please enter a valid email address" }),
+  password: z.string().min(6, { message: "Password must be at least 6 characters" }),
+});
 
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isSignUp, setIsSignUp] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+  
+  const { signIn, signUp, user, loading } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!loading && user) {
+      navigate("/dashboard");
+    }
+  }, [user, loading, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError(null);
+    setSuccess(null);
+    
+    // Validate input
+    const result = authSchema.safeParse({ email, password });
+    if (!result.success) {
+      setError(result.error.issues[0].message);
+      return;
+    }
+
     setIsLoading(true);
-    // TODO: Implement actual authentication
-    setTimeout(() => setIsLoading(false), 1000);
+
+    try {
+      if (isSignUp) {
+        const { error } = await signUp(email, password);
+        if (error) {
+          if (error.message.includes("already registered")) {
+            setError("This email is already registered. Please sign in instead.");
+          } else {
+            setError(error.message);
+          }
+        } else {
+          setSuccess("Account created successfully! You can now sign in.");
+          setIsSignUp(false);
+        }
+      } else {
+        const { error } = await signIn(email, password);
+        if (error) {
+          if (error.message.includes("Invalid login")) {
+            setError("Invalid email or password. Please try again.");
+          } else {
+            setError(error.message);
+          }
+        }
+      }
+    } catch (err) {
+      setError("An unexpected error occurred. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex">
@@ -56,12 +121,26 @@ const Login = () => {
           {/* Login Header */}
           <div className="mb-10">
             <h2 className="text-2xl font-semibold text-foreground mb-2">
-              Welcome Back
+              {isSignUp ? "Create Account" : "Welcome Back"}
             </h2>
             <p className="text-muted-foreground">
-              Sign in to access your operations dashboard
+              {isSignUp 
+                ? "Register to access the operations dashboard" 
+                : "Sign in to access your operations dashboard"}
             </p>
           </div>
+
+          {/* Error/Success Messages */}
+          {error && (
+            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+              {error}
+            </div>
+          )}
+          {success && (
+            <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg text-green-700 text-sm">
+              {success}
+            </div>
+          )}
 
           {/* Login Form */}
           <form onSubmit={handleSubmit} className="space-y-6">
@@ -101,21 +180,23 @@ const Login = () => {
               />
             </div>
 
-            <div className="flex items-center justify-between">
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input 
-                  type="checkbox" 
-                  className="w-4 h-4 rounded border-input text-primary focus:ring-primary"
-                />
-                <span className="text-sm text-muted-foreground">Remember me</span>
-              </label>
-              <a 
-                href="#" 
-                className="text-sm text-primary hover:text-primary/80 font-medium"
-              >
-                Forgot password?
-              </a>
-            </div>
+            {!isSignUp && (
+              <div className="flex items-center justify-between">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input 
+                    type="checkbox" 
+                    className="w-4 h-4 rounded border-input text-primary focus:ring-primary"
+                  />
+                  <span className="text-sm text-muted-foreground">Remember me</span>
+                </label>
+                <a 
+                  href="#" 
+                  className="text-sm text-primary hover:text-primary/80 font-medium"
+                >
+                  Forgot password?
+                </a>
+              </div>
+            )}
 
             <button
               type="submit"
@@ -140,13 +221,30 @@ const Login = () => {
                       d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                     />
                   </svg>
-                  Signing in...
+                  {isSignUp ? "Creating account..." : "Signing in..."}
                 </span>
               ) : (
-                "Sign In"
+                isSignUp ? "Create Account" : "Sign In"
               )}
             </button>
           </form>
+
+          {/* Toggle Sign Up / Sign In */}
+          <div className="mt-6 text-center">
+            <button
+              type="button"
+              onClick={() => {
+                setIsSignUp(!isSignUp);
+                setError(null);
+                setSuccess(null);
+              }}
+              className="text-sm text-primary hover:text-primary/80 font-medium"
+            >
+              {isSignUp 
+                ? "Already have an account? Sign in" 
+                : "Don't have an account? Sign up"}
+            </button>
+          </div>
 
           {/* Footer */}
           <div className="mt-10 pt-8 border-t border-border text-center">
